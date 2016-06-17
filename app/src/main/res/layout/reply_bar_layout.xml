@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="horizontal" android:layout_width="match_parent"
+    android:layout_height="50dp"
+    android:padding="2dp"
+    android:paddingEnd="10dp">
+
+    <ImageView
+        android:id="@+id/replyBar_imgSelectButton"
+        android:layout_width="0dp"
+        android:minWidth="20dp"
+        android:layout_weight="0.1"
+        android:layout_height="match_parent"
+        android:src="@android:drawable/ic_menu_camera"/>
+
+    <EditText
+        android:id="@+id/replyBar_comment"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="0.8"
+        android:hint="Wrie a reply ..."/>
+
+    <ImageView
+        android:id="@+id/replyBar_sendButton"
+        android:layout_width="0dp"
+        android:minWidth="20dp"
+        android:layout_height="match_parent"
+        android:layout_weight="0.1"
+        android:src="@android:drawable/ic_menu_send"/>
+
+</LinearLayout>
