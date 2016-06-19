@@ -1,9 +1,12 @@
 package com.dmitry.drop.project.model;
 
+import android.graphics.AvoidXfermode;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-import com.orm.SugarRecord;
+import com.activeandroid.Model;
+import com.activeandroid.annotation.Column;
+import com.activeandroid.annotation.Table;
 
 import java.util.Date;
 import java.util.List;
@@ -11,16 +14,29 @@ import java.util.List;
 /**
  * Created by Laptop on 7/06/2016.
  */
-public class Reply extends SugarRecord implements Parcelable {
 
+@Table(name = "Replies")
+public class Reply extends Model implements Parcelable {
+
+    @Column(name = "ImageFilePath")
     String imageFilePath;
+
+    @Column(name = "Comment")
     String comment;
+
+    @Column(name = "Author")
     String author;
+
+    @Column(name = "Date")
     String dateCreated;
 
+    @Column(name = "Post")
     public Post post;
 
+    public Reply() { super(); }
+
     public Reply(Post post, String author, String comment, String dateCreated, String imageFilePath) {
+        super();
         this.post = post;
         this.author = author;
         this.comment = comment;

@@ -6,6 +6,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.support.annotation.NonNull;
 
+import com.activeandroid.query.Select;
 import com.dmitry.drop.project.adapter.ReplyAdapter;
 import com.dmitry.drop.project.model.Post;
 import com.dmitry.drop.project.model.Reply;
@@ -13,7 +14,6 @@ import com.dmitry.drop.project.presenter.ViewPostPresenterImpl;
 import com.dmitry.drop.project.view.ViewPostView;
 import com.hannesdorfmann.mosby.mvp.MvpActivity;
 import com.hannesdorfmann.mosby.mvp.lce.MvpLceActivity;
-import com.orm.SugarRecord;
 
 import android.os.Bundle;
 import android.support.v4.widget.SwipeRefreshLayout;
@@ -89,11 +89,15 @@ public class ViewPostActivity extends MvpActivity<ViewPostView, ViewPostPresente
         long id = intent.getLongExtra("postId", -1);
 
         if (id != -1) {
-            post = Post.findById(Post.class, id);
+            post = new Select().from(Post.class).where("id = ?", id).executeSingle();
+
             Reply reply = new Reply(post, "IamAuthor", "comment", "dateisNow", "null");
+
+
+            reply.post = post;
             reply.save();
-            post.save();
-            replies = Reply.listAll(Reply.class);
+
+            replies = new Select().from(Reply.class).where("Post = ?", id).executeSingle();
             if(replies != null)
                 Toast.makeText(this, replies.size() + "", Toast.LENGTH_SHORT).show();
             else

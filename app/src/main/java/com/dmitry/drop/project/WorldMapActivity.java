@@ -1,5 +1,6 @@
 package com.dmitry.drop.project;
 
+import com.activeandroid.query.Select;
 import com.dmitry.drop.project.model.Post;
 import com.dmitry.drop.project.model.Reply;
 import com.dmitry.drop.project.presenter.WorldMapPresenterImpl;
@@ -20,7 +21,6 @@ import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.hannesdorfmann.mosby.mvp.MvpActivity;
-import com.orm.SugarRecord;
 
 import android.Manifest;
 import android.content.Intent;
@@ -33,6 +33,7 @@ import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.widget.Toast;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import butterknife.BindView;
@@ -76,6 +77,9 @@ public class WorldMapActivity extends MvpActivity<WorldMapView, WorldMapPresente
 
     //Default Circle variable
     private final static int RADIUS = 100;
+
+    //Databese
+    List<Post> posts;
 
     /* ------------------------ Activity Lifecycle Methods ------------------------ */
     @Override
@@ -218,8 +222,7 @@ public class WorldMapActivity extends MvpActivity<WorldMapView, WorldMapPresente
         map.setOnCameraChangeListener(this);
         map.setOnMyLocationButtonClickListener(this);
 
-        List<Post> posts = Post.listAll(Post.class);
-
+        posts = Post.getAllPosts();
         for (Post post : posts) {
 
             CircleOptions circleOptions = new CircleOptions()
@@ -380,7 +383,7 @@ public class WorldMapActivity extends MvpActivity<WorldMapView, WorldMapPresente
 
     @Override
     public void onMapClick(LatLng position) {
-        List<Post> posts = Post.listAll(Post.class);
+
         boolean clicked = false;
         Post clickedPost = new Post();
 

@@ -1,25 +1,43 @@
 package com.dmitry.drop.project.model;
 
+import com.activeandroid.Model;
+import com.activeandroid.annotation.Column;
+import com.activeandroid.annotation.Table;
+import com.activeandroid.query.Select;
 import com.google.android.gms.maps.model.LatLng;
-import com.orm.SugarRecord;
 
 import java.util.List;
 
 /**
  * Created by Laptop on 20/05/2016.
  */
-public class Post extends SugarRecord {
+
+@Table(name = "Posts")
+public class Post extends Model{
+
+    @Column(name = "ImageFilePath")
     String imageFilePath;
+
+    @Column(name = "Annotation")
     String annotation;
+
+    @Column(name = "Latitude")
     double latitude;
+
+    @Column(name = "Longitude")
     double longitude;
     final double INIT_RADIUS = 100;
+
+    @Column(name = "Radius")
     double radius;
+
+    @Column(name = "Date")
     String dateCreated;
 
-    public Post() {}
+    public Post() {super();}
 
     public Post(String annotation, String imageFilePath, double latitude, double longitude, String dateCreated) {
+        super();
         this.annotation = annotation;
         this.imageFilePath = imageFilePath;
         this.latitude = latitude;
@@ -72,8 +90,8 @@ public class Post extends SugarRecord {
         return new LatLng(latitude, longitude);
     }
 
-    public List<Reply> getReplies() {
-        return Reply.find(Reply.class, "post = ?", String.valueOf(getId()));
+    public static List<Post> getAllPosts() {
+        return new Select().from(Post.class).executeSingle();
     }
 
 }
