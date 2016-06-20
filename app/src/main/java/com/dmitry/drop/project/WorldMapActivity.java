@@ -1,6 +1,9 @@
 package com.dmitry.drop.project;
 
-import com.activeandroid.query.Select;
+
+import com.activeandroid.ActiveAndroid;
+import com.activeandroid.Configuration;
+import com.activeandroid.query.Delete;
 import com.dmitry.drop.project.model.Post;
 import com.dmitry.drop.project.model.Reply;
 import com.dmitry.drop.project.presenter.WorldMapPresenterImpl;
@@ -31,9 +34,8 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
-import android.widget.Toast;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import butterknife.BindView;
@@ -49,7 +51,7 @@ public class WorldMapActivity extends MvpActivity<WorldMapView, WorldMapPresente
         com.google.android.gms.location.LocationListener,
         GoogleMap.OnMapClickListener,
         GoogleMap.OnCameraChangeListener,
-        GoogleMap.OnMyLocationButtonClickListener{
+        GoogleMap.OnMyLocationButtonClickListener {
 
 
     @BindView(R.id.map)
@@ -79,7 +81,7 @@ public class WorldMapActivity extends MvpActivity<WorldMapView, WorldMapPresente
     private final static int RADIUS = 100;
 
     //Databese
-    List<Post> posts;
+    private List<Post> posts;
 
     /* ------------------------ Activity Lifecycle Methods ------------------------ */
     @Override
@@ -87,6 +89,13 @@ public class WorldMapActivity extends MvpActivity<WorldMapView, WorldMapPresente
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_world_map);
         ButterKnife.bind(this);
+
+        PermissionUtils.verifyStoragePermissions(this);
+
+        // TODO: Move to model
+        posts = Post.getAll();
+        if (posts == null)
+            posts = Collections.emptyList();
 
         if (mMapView != null) {
             mMapView.onCreate(savedInstanceState);
@@ -101,8 +110,8 @@ public class WorldMapActivity extends MvpActivity<WorldMapView, WorldMapPresente
 
     @Override
     protected void onPause() {
-        mMapView.onPause();
         super.onPause();
+        mMapView.onPause();
         if (mGoogleApiClient.isConnected()) {
             startLocationUpdates();
         }
@@ -174,16 +183,9 @@ public class WorldMapActivity extends MvpActivity<WorldMapView, WorldMapPresente
 
     @Override
     public void viewPost(Post post) {
-        Intent viewPost = ViewPostActivity.createIntent(this, post.getImageFilePath(), post.getAnnotation(), post.getId());
-        Reply reply = new Reply(post, "IamAuthor", "comment", "dateisNow", "null");
-
-        post.save();
-        reply.save();
+        Intent viewPost = ViewPostActivity.createIntent(this, post.getId());
 
         //Toast.makeText(this,  reply.getId().toString() + "", Toast.LENGTH_SHORT).show();
-
-
-
 
 
         startActivityForResult(viewPost, VIEW_POST_REQUEST);
@@ -197,8 +199,8 @@ public class WorldMapActivity extends MvpActivity<WorldMapView, WorldMapPresente
 
         if (requestCode == ADD_POST_REQUEST && resultCode == RESULT_OK) {
 
-            double latitude = data.getDoubleExtra("latitude", 0);
-            double longitude = data.getDoubleExtra("longitude", 0);
+            double latitude = data.getDoubleExtra(Constants.LATITUDE, 0);
+            double longitude = data.getDoubleExtra(Constants.LONGITUDE, 0);
 
             CircleOptions circleOptions = new CircleOptions()
                     .center(new LatLng(latitude, longitude))
@@ -209,6 +211,9 @@ public class WorldMapActivity extends MvpActivity<WorldMapView, WorldMapPresente
             circleOptions.fillColor(ContextCompat.getColor(this, R.color.light_orange));
 
             mMap.addCircle(circleOptions);
+
+            // TODO: Move to model
+            posts = Post.getAll();
         }
 
     }
@@ -222,7 +227,6 @@ public class WorldMapActivity extends MvpActivity<WorldMapView, WorldMapPresente
         map.setOnCameraChangeListener(this);
         map.setOnMyLocationButtonClickListener(this);
 
-        posts = Post.getAllPosts();
         for (Post post : posts) {
 
             CircleOptions circleOptions = new CircleOptions()
@@ -350,7 +354,7 @@ public class WorldMapActivity extends MvpActivity<WorldMapView, WorldMapPresente
         mLastLocation = location;
 
         //presenter.onLocationClicked(mLastLocation.getLongitude(), mLastLocation.getLatitude());
-        if(mCameraTracking)
+        if (mCameraTracking)
             moveCameraToMyLocation();
 
 
@@ -383,29 +387,12 @@ public class WorldMapActivity extends MvpActivity<WorldMapView, WorldMapPresente
 
     @Override
     public void onMapClick(LatLng position) {
-
-        boolean clicked = false;
-        Post clickedPost = new Post();
-
-        for (Post post : posts) {
-            LatLng center = post.getLatLng();
-            double radius = post.getRadius();
-            float[] distance = new float[1];
-            Location.distanceBetween(position.latitude, position.longitude, center.latitude, center.longitude, distance);
-            clicked = distance[0] < radius;
-
-            if (clicked) {
-                clickedPost = post;
-                break;
-            }
-        }
-
-        if (clicked) viewPost(clickedPost);
+        presenter.onMapClicked(posts, position.latitude, position.longitude);
     }
 
     @Override
     public void onCameraChange(CameraPosition cameraPosition) {
-        if(cameraPosition.zoom != Constants.ZOOM) {
+        if (cameraPosition.zoom != Constants.ZOOM) {
             mCameraTracking = false;
         }
     }

@@ -1,5 +1,7 @@
 package com.dmitry.drop.project.model;
 
+import android.location.Location;
+
 import com.activeandroid.Model;
 import com.activeandroid.annotation.Column;
 import com.activeandroid.annotation.Table;
@@ -13,7 +15,7 @@ import java.util.List;
  */
 
 @Table(name = "Posts")
-public class Post extends Model{
+public class Post extends Model {
 
     @Column(name = "ImageFilePath")
     String imageFilePath;
@@ -30,10 +32,12 @@ public class Post extends Model{
 
     @Column(name = "Radius")
     double radius;
+    //TODO: Dynamic Radius for posts
 
     @Column(name = "Date")
     String dateCreated;
 
+    // Needed for ActiveAndroid library
     public Post() {super();}
 
     public Post(String annotation, String imageFilePath, double latitude, double longitude, String dateCreated) {
@@ -86,12 +90,30 @@ public class Post extends Model{
         this.radius = radius;
     }
 
+    public String getDateCreated() {
+        return dateCreated;
+    }
+
+    public void setDateCreated(String dateCreated) {
+        this.dateCreated = dateCreated;
+    }
+
     public LatLng getLatLng() {
         return new LatLng(latitude, longitude);
     }
 
-    public static List<Post> getAllPosts() {
-        return new Select().from(Post.class).executeSingle();
+    public static List<Post> getAll() {
+        return new Select().from(Post.class).execute();
     }
 
+    public List<Reply> replies() {
+        return getMany(Reply.class, "Post");
+    }
+
+    public boolean isWithinRadius(double latitude, double longitude) {
+
+        float[] distance = new float[1];
+        Location.distanceBetween(latitude, longitude, this.latitude, this.longitude, distance);
+        return distance[0] < radius;
+    }
 }

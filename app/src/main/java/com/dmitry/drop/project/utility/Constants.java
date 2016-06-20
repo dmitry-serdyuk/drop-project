@@ -9,6 +9,9 @@ public class Constants {
     public static int FATEST_INTERVAL = 100; // 0.2 sec
     public static int DISPLACEMENT = 25; // 50 meters
 
+    public static String LATITUDE = "latitude";
+    public static String LONGITUDE = "longitude";
+
     //Default camera variables
     public static int BEARING = 0;
     public static int TILT = 30;

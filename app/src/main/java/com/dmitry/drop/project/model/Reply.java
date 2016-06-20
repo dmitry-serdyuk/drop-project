@@ -33,6 +33,7 @@ public class Reply extends Model implements Parcelable {
     @Column(name = "Post")
     public Post post;
 
+    // Needed for ActiveAndroid library
     public Reply() { super(); }
 
     public Reply(Post post, String author, String comment, String dateCreated, String imageFilePath) {

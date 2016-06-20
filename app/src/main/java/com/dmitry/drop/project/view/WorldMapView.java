@@ -15,5 +15,4 @@ public interface WorldMapView extends MvpView {
     void viewPost(Post post);
 
 
-
-    }
+}

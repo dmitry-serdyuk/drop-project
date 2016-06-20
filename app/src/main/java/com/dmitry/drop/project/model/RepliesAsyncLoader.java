@@ -10,9 +10,8 @@ import java.util.List;
 public class RepliesAsyncLoader extends AsyncTask<Void, Void, Void> {
 
 
-
     public interface RepliesLoaderListener {
-        public void onSuccess(List<Reply> replies);
+        public void onSuccess();
 
         public void onError(Exception e);
     }
@@ -26,12 +25,18 @@ public class RepliesAsyncLoader extends AsyncTask<Void, Void, Void> {
 
     @Override
     protected Void doInBackground(Void... voids) {
-
+        // Simulating backend call
         try {
             Thread.sleep(1000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
         return null;
+    }
+
+    @Override
+    protected void onPostExecute(Void aVoid) {
+        super.onPostExecute(aVoid);
+        listener.onSuccess();
     }
 }

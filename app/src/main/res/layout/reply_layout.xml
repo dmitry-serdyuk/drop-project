@@ -1,21 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:orientation="horizontal">
+    android:layout_height="120dp"
+    android:orientation="horizontal"
+    android:paddingTop="5dp">
 
     <ImageView
         android:id="@+id/replyLayout_replyImage"
         android:layout_width="100dp"
-        android:layout_height="match_parent"
-        android:src="@android:drawable/ic_menu_camera"/>
+        android:layout_height="100dp"
+        android:maxHeight="100dp"
+        android:padding="5dp"
+        android:scaleType="centerCrop"
+        android:src="@drawable/ic_image" />
 
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
         <LinearLayout
-            android:id="@+id/viewPost_authorLayout"
+            android:id="@+id/replyLayout_authorLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_alignParentTop="true"
@@ -32,7 +36,7 @@
                     android:layout_height="match_parent"
                     android:layout_alignParentStart="true"
                     android:padding="2dp"
-                    android:text="Anonymous: "
+                    android:text="@string/replyLayout_userPlaceholder"
                     android:textAppearance="?android:attr/textAppearanceMedium"
                     android:textSize="15sp" />
 
@@ -42,7 +46,6 @@
                     android:layout_height="match_parent"
                     android:layout_alignParentEnd="true"
                     android:padding="2dp"
-                    android:text="20/1/2016  22:00: "
                     android:textAppearance="?android:attr/textAppearanceMedium"
                     android:textSize="15sp" />
 
@@ -50,22 +53,17 @@
 
             <View
                 android:layout_width="match_parent"
-
                 android:layout_height="1dp"
                 android:layout_marginBottom="5dp"
                 android:layout_marginTop="5dp"
-
-
                 android:background="@android:color/darker_gray" />
 
             <TextView
                 android:id="@+id/replyLayout_comment"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textSize="15sp"
-                android:layout_below="@+id/viewPost_author"
-                android:text="This is a very nice image, I took it while on the way to university"
-                android:textAppearance="?android:attr/textAppearanceSmall" />
+                android:textAppearance="?android:attr/textAppearanceSmall"
+                android:textSize="15sp" />
 
         </LinearLayout>
 

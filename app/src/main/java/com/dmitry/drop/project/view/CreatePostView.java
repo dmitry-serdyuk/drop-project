@@ -10,4 +10,6 @@ public interface CreatePostView extends MvpView {
     void onDropButtonClick();
 
     void savePost();
+
+    void returnToWorldMap();
 }

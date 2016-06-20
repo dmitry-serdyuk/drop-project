@@ -18,7 +18,7 @@
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_weight="0.8"
-        android:hint="Wrie a reply ..."/>
+        android:hint="@string/replyBar_reply_tip"/>
 
     <ImageView
         android:id="@+id/replyBar_sendButton"

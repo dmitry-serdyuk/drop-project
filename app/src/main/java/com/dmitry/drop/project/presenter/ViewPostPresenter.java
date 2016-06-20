@@ -6,4 +6,8 @@ package com.dmitry.drop.project.presenter;
 public interface ViewPostPresenter {
 
     void loadReplies();
+
+    void onSendReplyClick(long postId, String author, String annotation, String date, String imageFilePath);
+
+    void onSelectImageClick();
 }
