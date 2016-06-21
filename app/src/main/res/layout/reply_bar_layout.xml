@@ -7,9 +7,11 @@
 
     <ImageView
         android:id="@+id/replyBar_imgSelectButton"
-        android:layout_width="0dp"
-        android:minWidth="20dp"
-        android:layout_weight="0.1"
+        android:layout_width="50dp"
+        android:minWidth="50dp"
+        android:maxHeight="50dp"
+        android:maxWidth="50dp"
+        android:scaleType="fitXY"
         android:layout_height="match_parent"
         android:src="@android:drawable/ic_menu_camera"/>
 

@@ -11,14 +11,16 @@ import java.util.List;
  */
 public interface ViewPostView extends MvpView {
 
+    // TODO: Make sure all views only have methods beginning with show/hide
     void onSendReplyClick();
 
-    void refreshReplies();
+    void showReplies(List<Reply> replies);
 
     void onSelectImageClick();
 
     void selectImage();
 
-    List<Reply> getReplies(long postId);
+    void showReplyLoadingError();
 
+    void clearReplyBox();
 }

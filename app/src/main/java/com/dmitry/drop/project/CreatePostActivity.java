@@ -13,6 +13,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
+import android.text.format.DateUtils;
 import android.util.Log;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -20,6 +21,7 @@ import android.widget.Toast;
 
 import com.dmitry.drop.project.model.Post;
 import com.dmitry.drop.project.model.Reply;
+import com.dmitry.drop.project.presenter.CreatePostPresenter;
 import com.dmitry.drop.project.presenter.CreatePostPresenterImpl;
 import com.dmitry.drop.project.utility.Constants;
 import com.dmitry.drop.project.utility.PermissionUtils;
@@ -42,7 +44,7 @@ import butterknife.OnClick;
 /**
  * Created by Laptop on 7/06/2016.
  */
-public class CreatePostActivity extends MvpActivity<CreatePostView, CreatePostPresenterImpl>
+public class CreatePostActivity extends MvpActivity<CreatePostView, CreatePostPresenter>
         implements
         CreatePostView {
 
@@ -70,7 +72,7 @@ public class CreatePostActivity extends MvpActivity<CreatePostView, CreatePostPr
 
     @NonNull
     @Override
-    public CreatePostPresenterImpl createPresenter() {
+    public CreatePostPresenter createPresenter() {
         return new CreatePostPresenterImpl();
     }
 

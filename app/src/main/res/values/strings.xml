@@ -10,5 +10,6 @@
     <string name="replyBar_reply_tip">Write a reply ...</string>
     <string name="username_placeholder">Anonymous: </string>
     <string name="photo_error">Could not take a photo</string>
+    <string name="reply_loading_error">Could not load post replies. Please try again later.</string>
 
 </resources>

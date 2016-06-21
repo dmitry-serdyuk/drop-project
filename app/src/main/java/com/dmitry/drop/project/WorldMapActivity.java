@@ -1,11 +1,8 @@
 package com.dmitry.drop.project;
 
 
-import com.activeandroid.ActiveAndroid;
-import com.activeandroid.Configuration;
-import com.activeandroid.query.Delete;
 import com.dmitry.drop.project.model.Post;
-import com.dmitry.drop.project.model.Reply;
+import com.dmitry.drop.project.presenter.WorldMapPresenter;
 import com.dmitry.drop.project.presenter.WorldMapPresenterImpl;
 import com.dmitry.drop.project.utility.Constants;
 import com.dmitry.drop.project.view.WorldMapView;
@@ -42,7 +39,7 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 
-public class WorldMapActivity extends MvpActivity<WorldMapView, WorldMapPresenterImpl>
+public class WorldMapActivity extends MvpActivity<WorldMapView, WorldMapPresenter>
         implements
         WorldMapView,
         OnMapReadyCallback,
@@ -150,7 +147,7 @@ public class WorldMapActivity extends MvpActivity<WorldMapView, WorldMapPresente
 
     @NonNull
     @Override
-    public WorldMapPresenterImpl createPresenter() {
+    public WorldMapPresenter createPresenter() {
         return new WorldMapPresenterImpl();
     }
 
@@ -207,8 +204,8 @@ public class WorldMapActivity extends MvpActivity<WorldMapView, WorldMapPresente
                     .radius(RADIUS);
 
 
-            circleOptions.strokeColor(ContextCompat.getColor(this, R.color.orange));
-            circleOptions.fillColor(ContextCompat.getColor(this, R.color.light_orange));
+            circleOptions.strokeColor(ContextCompat.getColor(this, R.color.blue));
+            circleOptions.fillColor(ContextCompat.getColor(this, R.color.light_blue));
 
             mMap.addCircle(circleOptions);
 
@@ -234,8 +231,8 @@ public class WorldMapActivity extends MvpActivity<WorldMapView, WorldMapPresente
                     .radius(RADIUS);
 
 
-            circleOptions.strokeColor(ContextCompat.getColor(this, R.color.orange));
-            circleOptions.fillColor(ContextCompat.getColor(this, R.color.light_orange));
+            circleOptions.strokeColor(ContextCompat.getColor(this, R.color.blue));
+            circleOptions.fillColor(ContextCompat.getColor(this, R.color.light_blue));
 
             mMap.addCircle(circleOptions);
         }

@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.support.v7.widget.RecyclerView;
+import android.text.format.DateUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,7 +14,11 @@ import android.widget.TextView;
 import com.dmitry.drop.project.R;
 import com.dmitry.drop.project.model.Reply;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 import butterknife.ButterKnife;
 
@@ -69,15 +74,31 @@ public class ReplyAdapter extends RecyclerView.Adapter<ReplyAdapter.ViewHolder> 
         // - replace the contents of the view with that element
 
         String imageFilePath = replies.get(position).getImageFilePath();
+        String elapsedTime = getElapsedTime(replies.get(position).getDateCreated());
 
         holder.mAuthorTextView.setText(replies.get(position).getAuthor());
         holder.mCommentTextView.setText(replies.get(position).getComment());
-        holder.mDateTextView.setText(replies.get(position).getDateCreated());
+        holder.mDateTextView.setText(elapsedTime);
 
         if (imageFilePath != null) {
             Bitmap replyImage = BitmapFactory.decodeFile(imageFilePath);
             holder.mReplyImage.setImageBitmap(replyImage);
         }
+    }
+
+    private String getElapsedTime(String dateCreated) {
+        SimpleDateFormat f = new SimpleDateFormat("dd/MM/yyy HH:mm", Locale.US);
+        Date d = null;
+        try {
+            d = f.parse(dateCreated);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        long dateCreatedMilleseconds = 0;
+        if (d != null) {
+            dateCreatedMilleseconds = d.getTime();
+        }
+        return DateUtils.getRelativeTimeSpanString(dateCreatedMilleseconds, new Date().getTime(), DateUtils.MINUTE_IN_MILLIS).toString();
     }
 
     // Return the size of your dataset (invoked by the layout manager)
