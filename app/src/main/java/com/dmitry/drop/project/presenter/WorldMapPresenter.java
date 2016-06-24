@@ -1,7 +1,6 @@
 package com.dmitry.drop.project.presenter;
 
 import com.dmitry.drop.project.model.Post;
-import com.dmitry.drop.project.view.ViewPostView;
 import com.dmitry.drop.project.view.WorldMapView;
 import com.hannesdorfmann.mosby.mvp.MvpPresenter;
 
@@ -14,8 +13,11 @@ public interface WorldMapPresenter extends MvpPresenter<WorldMapView> {
 
     void onMyLocationClicked();
 
-    void onAddPostClick();
+    void onCreatePostClick();
 
     void onMapClicked(List<Post> posts, double latitude, double longitude);
 
+    void onStart();
+
+    void onPostCreated(long postId);
 }

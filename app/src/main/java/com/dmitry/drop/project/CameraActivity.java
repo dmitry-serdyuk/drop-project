@@ -7,6 +7,10 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Matrix;
 import android.graphics.Paint;
+import android.graphics.PorterDuff;
+import android.graphics.PorterDuffXfermode;
+import android.graphics.RadialGradient;
+import android.graphics.Rect;
 import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.Bundle;
@@ -15,7 +19,6 @@ import android.provider.MediaStore;
 import android.util.Log;
 
 import com.dmitry.drop.project.utility.Constants;
-import com.dmitry.drop.project.utility.PermissionUtils;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -30,23 +33,19 @@ import java.util.Locale;
  */
 public class CameraActivity extends Activity {
 
+    public static final String CAMERA_IMG_FILE_PATH = "cameraImgFilePath";
+    public static final String THUMBNAIL_IMG_FILE_PATH = "thumbnailImgFilePath";
     private static final int REQUEST_TAKE_PHOTO = 1;
-
-    private double mLatitude;
-    private double mLongitude;
-    private File mTempFile;
-    private String mImageFileName;
-    private String mImageFilePath;
-    private Bitmap mScaledBitmap;
-    public static final String FILE_PATH = "imageFilePath";
-
+    private File mCameraImgFile;
+    private File mThumbnailImgFile;
+    private String mCameraImgFilePath;
+    private String mThumbnailImgFilePath;
+    private Bitmap mCameraImgBitmap;
+    private Bitmap mThumbnailBitmap;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        mLatitude = getIntent().getDoubleExtra("latitude", 0);
-        mLongitude = getIntent().getDoubleExtra("longitude", 0);
 
         dispatchTakePictureIntent();
     }
@@ -59,24 +58,25 @@ public class CameraActivity extends Activity {
             // Create the File where the photo should go
 
             try {
-                mTempFile = createImageFile();
+                mCameraImgFile = createCameraImgFile();
+                mThumbnailImgFile = createThumbnailImgFile();
             } catch (IOException ex) {
                 // Error occurred while creating the File
                 Log.d(Constants.DEBUG_TAG, ex.getMessage(), ex);
             }
             // Continue only if the File was successfully created
-            if (mTempFile != null) {
+            if (mCameraImgFile != null) {
                 takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT,
-                        Uri.fromFile(mTempFile));
+                        Uri.fromFile(mCameraImgFile));
                 startActivityForResult(takePictureIntent, REQUEST_TAKE_PHOTO);
             }
         }
     }
 
-    private File createImageFile() throws IOException {
+    private File createThumbnailImgFile() throws IOException {
         // Create an image file name
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(new Date());
-        mImageFileName = "JPEG_" + timeStamp + "_";
+        String mImageFileName = "JPEG_" + "Thumbnail_" + timeStamp + "_";
         File storageDir = Environment.getExternalStoragePublicDirectory(
                 Environment.DIRECTORY_PICTURES);
         File image = File.createTempFile(
@@ -86,7 +86,24 @@ public class CameraActivity extends Activity {
         );
 
         // Save a file: path for use with ACTION_VIEW intents
-        mImageFilePath = image.getAbsolutePath();
+        mThumbnailImgFilePath = image.getAbsolutePath();
+        return image;
+    }
+
+    private File createCameraImgFile() throws IOException {
+        // Create an image file name
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(new Date());
+        String mImageFileName = "JPEG_" + timeStamp + "_";
+        File storageDir = Environment.getExternalStoragePublicDirectory(
+                Environment.DIRECTORY_PICTURES);
+        File image = File.createTempFile(
+                mImageFileName,  /* prefix */
+                ".jpg",         /* suffix */
+                storageDir      /* directory */
+        );
+
+        // Save a file: path for use with ACTION_VIEW intents
+        mCameraImgFilePath = image.getAbsolutePath();
         return image;
     }
 
@@ -96,17 +113,23 @@ public class CameraActivity extends Activity {
 
         if (requestCode == REQUEST_TAKE_PHOTO && resultCode == RESULT_OK) {
 
-            mScaledBitmap = BitmapFactory.decodeFile(mImageFilePath);
+            //get bitmap from camera activity file path
+            mCameraImgBitmap = BitmapFactory.decodeFile(mCameraImgFilePath);
 
-            compressImg();
-            rotateImg();
-            writeCompressedBitmap();
+            //rotate the camera image and save to file
+            rotateImages();
+            writeFile(mCameraImgFilePath, mCameraImgBitmap);
 
-            Intent returnFilePath = new Intent();
-            returnFilePath.putExtra(FILE_PATH, mImageFilePath);
-            setResult(RESULT_OK, returnFilePath);
-            finish();
+            //create a thumbnail from the camera image, compress, crop and write to file
+            mThumbnailBitmap = mCameraImgBitmap;
+            compressBitmap(mThumbnailBitmap);
+            // TODO: Separate function into two
+            cropImageToCircle();
+            featherImage;
+            circleCropAndFeather();
+            writeFile(mThumbnailImgFilePath, mThumbnailBitmap);
 
+            returnToMap();
 
         } else if (requestCode == REQUEST_TAKE_PHOTO && resultCode == RESULT_CANCELED) {
             setResult(RESULT_CANCELED);
@@ -114,15 +137,52 @@ public class CameraActivity extends Activity {
         }
     }
 
-    private void compressImg() {
+    // TODO: Change function name as it doesn't match all contexts
+    private void returnToMap() {
+        Intent returnFilePaths = new Intent();
+        returnFilePaths.putExtra(CAMERA_IMG_FILE_PATH, mCameraImgFilePath);
+        returnFilePaths.putExtra(THUMBNAIL_IMG_FILE_PATH, mThumbnailImgFilePath);
+        setResult(RESULT_OK, returnFilePaths);
+        finish();
+    }
+
+    private void circleCropAndFeather() {
+        int width = mThumbnailBitmap.getWidth();
+        int height = mThumbnailBitmap.getHeight();
+
+        Bitmap output = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(output);
+
+        final int color = 0xff424242;
+        RadialGradient gradient = new RadialGradient(width / 2, height / 2, height / 5,
+                new int[]{0xFFFFFFFF, 0xFFFFFFFF, 0x00FFFFFF},
+                new float[]{0.0f, 0.8f, 1.0f},
+                android.graphics.Shader.TileMode.CLAMP);
+        final Paint paint = new Paint();
+        paint.setShader(gradient);
+
+        final Rect rect = new Rect(0, 0, width, height);
+
+        paint.setAntiAlias(true);
+        canvas.drawARGB(0, 0, 0, 0);
+        paint.setColor(color);
+        canvas.drawCircle(width / 2, height / 2,
+                width / 2, paint);
+        paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_IN));
+
+        canvas.drawBitmap(mThumbnailBitmap, rect, rect, paint);
+
+        mThumbnailBitmap = output;
+    }
+
+    private void compressBitmap(Bitmap bitmap) {
         BitmapFactory.Options options = new BitmapFactory.Options();
 
-        //Only load the bounds not actual pixels
+        Bitmap bmp = bitmap;
         options.inJustDecodeBounds = true;
-        Bitmap bmp = BitmapFactory.decodeFile(mImageFilePath, options);
 
-        int actualHeight = options.outHeight;
-        int actualWidth = options.outWidth;
+        int actualHeight = bitmap.getHeight();
+        int actualWidth = bitmap.getWidth();
 
         //Max Height and width values of the compressed image is taken as 816x612
         float maxHeight = 816.0f;
@@ -143,7 +203,6 @@ public class CameraActivity extends Activity {
             } else {
                 actualHeight = (int) maxHeight;
                 actualWidth = (int) maxWidth;
-
             }
         }
 
@@ -159,14 +218,7 @@ public class CameraActivity extends Activity {
         options.inTempStorage = new byte[16 * 1024];
 
         try {
-            //Load the bitmap from its path
-            bmp = BitmapFactory.decodeFile(mImageFilePath, options);
-        } catch (OutOfMemoryError exception) {
-            exception.printStackTrace();
-
-        }
-        try {
-            mScaledBitmap = Bitmap.createBitmap(actualWidth, actualHeight, Bitmap.Config.ARGB_8888);
+            bitmap = Bitmap.createBitmap(actualWidth, actualHeight, Bitmap.Config.ARGB_8888);
         } catch (OutOfMemoryError exception) {
             exception.printStackTrace();
         }
@@ -179,10 +231,9 @@ public class CameraActivity extends Activity {
         Matrix scaleMatrix = new Matrix();
         scaleMatrix.setScale(ratioX, ratioY, middleX, middleY);
 
-        Canvas canvas = new Canvas(mScaledBitmap);
+        Canvas canvas = new Canvas(bitmap);
         canvas.setMatrix(scaleMatrix);
         canvas.drawBitmap(bmp, middleX - bmp.getWidth() / 2, middleY - bmp.getHeight() / 2, new Paint(Paint.FILTER_BITMAP_FLAG));
-
     }
 
     private int calculateInSampleSize(BitmapFactory.Options options, int reqWidth, int reqHeight) {
@@ -204,10 +255,10 @@ public class CameraActivity extends Activity {
         return inSampleSize;
     }
 
-    private void rotateImg() {
+    private void rotateImages() {
         ExifInterface exif;
         try {
-            exif = new ExifInterface(mImageFilePath);
+            exif = new ExifInterface(mCameraImgFilePath);
 
             int orientation = exif.getAttributeInt(
                     ExifInterface.TAG_ORIENTATION, 0);
@@ -224,22 +275,22 @@ public class CameraActivity extends Activity {
                 Log.d(Constants.DEBUG_TAG, "Exif modified: " + orientation);
             }
 
-            mScaledBitmap = Bitmap.createBitmap(mScaledBitmap, 0, 0,
-                    mScaledBitmap.getWidth(), mScaledBitmap.getHeight(), matrix,
+            mCameraImgBitmap = Bitmap.createBitmap(mCameraImgBitmap, 0, 0,
+                    mCameraImgBitmap.getWidth(), mCameraImgBitmap.getHeight(), matrix,
                     true);
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    private void writeCompressedBitmap() {
-        PermissionUtils.verifyStoragePermissions(this);
+    private void writeFile(String filePath, Bitmap bitmap) {
+
         FileOutputStream out;
         try {
-            out = new FileOutputStream(mImageFilePath);
+            out = new FileOutputStream(filePath);
 
             //Write the compressed bitmap at the destination specified by filename.
-            mScaledBitmap.compress(Bitmap.CompressFormat.JPEG, 80, out);
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
 
         } catch (FileNotFoundException e) {
             e.printStackTrace();
@@ -250,7 +301,8 @@ public class CameraActivity extends Activity {
     public void onBackPressed() {
         super.onBackPressed();
 
-        mTempFile.delete();
+        mCameraImgFile.delete();
+        mThumbnailImgFile.delete();
         finish();
     }
 }

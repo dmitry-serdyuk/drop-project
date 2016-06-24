@@ -7,15 +7,28 @@ import java.util.List;
  */
 public interface PostModel {
 
-    void savePost(String annotationText, String mImageFilePath, long mLatitude, long mLongitude, String date);
+    // TODO: Make all methods void and follow same process as getReplies
+
+    long savePost(String annotationText, String cameraImgFilePath, String thumbnailImgFilePath,
+                  double latitude, double longitude, String date);
 
     void getReplies(long postId, GetRepliesCallback callback);
 
-    Post getPost(long postId);
+    void getPost(long postId, GetPostCallback callback);
 
+    List<Post> getAllPosts();
+
+    //Debug Method
+    void delete(long postId);
 
     interface GetRepliesCallback {
         void onSuccess(List<Reply> replies);
+
+        void onError(String error);
+    }
+
+    interface GetPostCallback {
+        void onSuccess(Post post);
 
         void onError(String error);
     }

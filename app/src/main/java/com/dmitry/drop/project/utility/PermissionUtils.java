@@ -25,9 +25,7 @@ import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.DialogFragment;
-import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
-
 
 import com.dmitry.drop.project.R;
 
@@ -83,7 +81,7 @@ public abstract class PermissionUtils {
     /**
      * A dialog that explains the use of the location permission and requests the necessary
      * permission.
-     * <p/>
+     * <p>
      * The activity should implement
      * {@link android.support.v4.app.ActivityCompat.OnRequestPermissionsResultCallback}
      * to handle permit or denial of this permission request.
@@ -99,7 +97,7 @@ public abstract class PermissionUtils {
         /**
          * Creates a new instance of a dialog displaying the rationale for the use of the location
          * permission.
-         * <p/>
+         * <p>
          * The permission is requested after clicking 'ok'.
          *
          * @param requestCode    Id of the request that is used to request the permission. It is

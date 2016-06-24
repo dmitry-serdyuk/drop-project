@@ -2,6 +2,7 @@ package com.dmitry.drop.project.presenter;
 
 
 import com.dmitry.drop.project.model.Post;
+import com.dmitry.drop.project.model.PostModel;
 import com.dmitry.drop.project.view.WorldMapView;
 import com.hannesdorfmann.mosby.mvp.MvpBasePresenter;
 
@@ -12,6 +13,12 @@ import java.util.List;
  */
 public class WorldMapPresenterImpl extends MvpBasePresenter<WorldMapView> implements WorldMapPresenter {
 
+    private PostModel postModel;
+
+    public WorldMapPresenterImpl(PostModel postModel) {
+        this.postModel = postModel;
+    }
+
     @Override
     public void onMyLocationClicked() {
         if (isViewAttached())
@@ -19,9 +26,9 @@ public class WorldMapPresenterImpl extends MvpBasePresenter<WorldMapView> implem
     }
 
     @Override
-    public void onAddPostClick() {
+    public void onCreatePostClick() {
         if (isViewAttached())
-            getView().addPost();
+            getView().createPost();
     }
 
     @Override
@@ -40,7 +47,35 @@ public class WorldMapPresenterImpl extends MvpBasePresenter<WorldMapView> implem
 
         if (clicked) {
             if (isViewAttached())
+                // TODO: Do this instead getView().showPostSelector(List<Post> post)
                 getView().viewPost(clickedPost);
         }
+    }
+
+    @Override
+    public void onStart() {
+        // TODO: Change this to callback
+        List posts = postModel.getAllPosts();
+
+        if (isViewAttached())
+            getView().showPosts(posts);
+
+    }
+
+    @Override
+    public void onPostCreated(long postId) {
+        postModel.getPost(postId, new PostModel.GetPostCallback() {
+            @Override
+            public void onSuccess(Post post) {
+                if (isViewAttached())
+                    getView().addPost(post);
+            }
+
+            @Override
+            public void onError(String error) {
+                if (isViewAttached())
+                    getView().showAddPostError(error);
+            }
+        });
     }
 }

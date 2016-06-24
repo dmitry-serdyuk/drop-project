@@ -4,38 +4,20 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Canvas;
-import android.graphics.Matrix;
-import android.graphics.Paint;
-import android.media.ExifInterface;
-import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
-import android.provider.MediaStore;
 import android.support.annotation.NonNull;
-import android.text.format.DateUtils;
-import android.util.Log;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.Toast;
 
-import com.dmitry.drop.project.model.Post;
-import com.dmitry.drop.project.model.Reply;
+import com.dmitry.drop.project.model.PostModelImpl;
 import com.dmitry.drop.project.presenter.CreatePostPresenter;
 import com.dmitry.drop.project.presenter.CreatePostPresenterImpl;
 import com.dmitry.drop.project.utility.Constants;
-import com.dmitry.drop.project.utility.PermissionUtils;
 import com.dmitry.drop.project.view.CreatePostView;
 import com.hannesdorfmann.mosby.mvp.MvpActivity;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Locale;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -48,23 +30,21 @@ public class CreatePostActivity extends MvpActivity<CreatePostView, CreatePostPr
         implements
         CreatePostView {
 
+    private static final int REQUEST_CAMERA_PHOTO = 1;
     @BindView(R.id.createPost_cameraImg)
     ImageView cameraImg;
-
     @BindView(R.id.createPost_annotation)
     EditText annotation;
-
     @BindView(R.id.createPost_dropButton)
     ImageView dropButton;
-
-    private static final int REQUEST_CAMERA_PHOTO = 1;
-
     private double mLongitude;
     private double mLatitude;
-    private String mImageFilePath;
+    private String mCameraImageFilePath;
+    private String mThumbnailImageFilePath;
 
     public static Intent createIntent(Context context, double latitude, double longitude) {
         Intent intent = new Intent(context, CreatePostActivity.class);
+        // TODO: Constants for extra <---- IMPORTANT
         intent.putExtra("latitude", latitude);
         intent.putExtra("longitude", longitude);
         return intent;
@@ -73,7 +53,7 @@ public class CreatePostActivity extends MvpActivity<CreatePostView, CreatePostPr
     @NonNull
     @Override
     public CreatePostPresenter createPresenter() {
-        return new CreatePostPresenterImpl();
+        return new CreatePostPresenterImpl(new PostModelImpl());
     }
 
     @Override
@@ -82,10 +62,11 @@ public class CreatePostActivity extends MvpActivity<CreatePostView, CreatePostPr
         setContentView(R.layout.activity_create_post);
         ButterKnife.bind(this);
 
-
+        // TODO: Constants for extra <---- IMPORTANT
         mLatitude = getIntent().getDoubleExtra("latitude", 0);
         mLongitude = getIntent().getDoubleExtra("longitude", 0);
 
+        // TODO: CreateIntent for CameraActivity
         Intent takePhoto = new Intent(this, CameraActivity.class);
         startActivityForResult(takePhoto, REQUEST_CAMERA_PHOTO);
 
@@ -96,8 +77,9 @@ public class CreatePostActivity extends MvpActivity<CreatePostView, CreatePostPr
         super.onActivityResult(requestCode, resultCode, data);
 
         if (requestCode == REQUEST_CAMERA_PHOTO && resultCode == RESULT_OK) {
-            mImageFilePath = data.getStringExtra(CameraActivity.FILE_PATH);
-            Bitmap photo = BitmapFactory.decodeFile(mImageFilePath);
+            mCameraImageFilePath = data.getStringExtra(CameraActivity.CAMERA_IMG_FILE_PATH);
+            mThumbnailImageFilePath = data.getStringExtra(CameraActivity.THUMBNAIL_IMG_FILE_PATH);
+            Bitmap photo = BitmapFactory.decodeFile(mCameraImageFilePath);
             cameraImg.setImageBitmap(photo);
         } else if (requestCode == REQUEST_CAMERA_PHOTO && resultCode == RESULT_CANCELED) {
             finish();
@@ -106,25 +88,20 @@ public class CreatePostActivity extends MvpActivity<CreatePostView, CreatePostPr
 
     @OnClick(R.id.createPost_cameraImg)
     public void onDropButtonClick() {
-        presenter.onDropButtonClick();
+        String annotationText = annotation.getText().toString();
+        String date = DateFormat.getInstance().format(new Date());
+        presenter.onDropButtonClick(annotationText, mCameraImageFilePath, mThumbnailImageFilePath,
+                mLatitude, mLongitude, date);
     }
 
     @Override
-    public void returnToWorldMap() {
+    public void returnToWorldMap(long postId) {
+        // TODO: Tie constants to CreatePostView
         Intent worldMapIntent = new Intent();
         worldMapIntent.putExtra(Constants.LATITUDE, mLatitude);
         worldMapIntent.putExtra(Constants.LONGITUDE, mLongitude);
+        worldMapIntent.putExtra(POST_ID_EXTRA, postId);
         setResult(RESULT_OK, worldMapIntent);
         finish();
-    }
-
-
-    // TODO: Move to model
-    @Override
-    public void savePost() {
-        String annotationText = annotation.getText().toString();
-        String date = DateFormat.getInstance().format(new Date());
-        Post post = new Post(annotationText, mImageFilePath, mLatitude, mLongitude, date);
-        post.save();
     }
 }

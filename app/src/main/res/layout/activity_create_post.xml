@@ -23,7 +23,7 @@
         android:layout_marginRight="90dp"
         android:padding="5dp"
         android:background="@drawable/annotation_background"
-        android:minHeight="75dp"
+        android:minHeight="40dp"
         android:textColor="@color/white" />
 
     <ImageView

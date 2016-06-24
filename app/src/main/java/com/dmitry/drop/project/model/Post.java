@@ -17,19 +17,17 @@ import java.util.List;
 @Table(name = "Posts")
 public class Post extends Model {
 
+    final double INIT_RADIUS = 100;
     @Column(name = "ImageFilePath")
     String imageFilePath;
-
+    @Column(name = "ThumbnailFilePath")
+    String thumbnailFilePath;
     @Column(name = "Annotation")
     String annotation;
-
     @Column(name = "Latitude")
     double latitude;
-
     @Column(name = "Longitude")
     double longitude;
-    final double INIT_RADIUS = 100;
-
     @Column(name = "Radius")
     double radius;
     //TODO: Dynamic Radius for posts
@@ -38,16 +36,23 @@ public class Post extends Model {
     String dateCreated;
 
     // Needed for ActiveAndroid library
-    public Post() {super();}
+    public Post() {
+        super();
+    }
 
-    public Post(String annotation, String imageFilePath, double latitude, double longitude, String dateCreated) {
+    public Post(String annotation, String imageFilePath, String thumbnailFilePath, double latitude, double longitude, String dateCreated) {
         super();
         this.annotation = annotation;
         this.imageFilePath = imageFilePath;
+        this.thumbnailFilePath = thumbnailFilePath;
         this.latitude = latitude;
         this.longitude = longitude;
         this.dateCreated = dateCreated;
         radius = INIT_RADIUS;
+    }
+
+    public static List<Post> getAll() {
+        return new Select().from(Post.class).execute();
     }
 
     public String getAnnotation() {
@@ -102,16 +107,15 @@ public class Post extends Model {
         return new LatLng(latitude, longitude);
     }
 
-    public static List<Post> getAll() {
-        return new Select().from(Post.class).execute();
-    }
-
     public List<Reply> replies() {
         return getMany(Reply.class, "Post");
     }
 
-    public boolean isWithinRadius(double latitude, double longitude) {
+    public String getThumbnailFilePath() {
+        return thumbnailFilePath;
+    }
 
+    public boolean isWithinRadius(double latitude, double longitude) {
         float[] distance = new float[1];
         Location.distanceBetween(latitude, longitude, this.latitude, this.longitude, distance);
         return distance[0] < radius;

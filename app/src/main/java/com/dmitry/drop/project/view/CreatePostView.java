@@ -7,9 +7,9 @@ import com.hannesdorfmann.mosby.mvp.MvpView;
  */
 public interface CreatePostView extends MvpView {
 
+    String POST_ID_EXTRA = "IdExtra";
+
     void onDropButtonClick();
 
-    void savePost();
-
-    void returnToWorldMap();
+    void returnToWorldMap(long postId);
 }

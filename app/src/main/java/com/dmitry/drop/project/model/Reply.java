@@ -1,15 +1,11 @@
 package com.dmitry.drop.project.model;
 
-import android.graphics.AvoidXfermode;
 import android.os.Parcel;
 import android.os.Parcelable;
 
 import com.activeandroid.Model;
 import com.activeandroid.annotation.Column;
 import com.activeandroid.annotation.Table;
-
-import java.util.Date;
-import java.util.List;
 
 /**
  * Created by Laptop on 7/06/2016.
@@ -18,23 +14,31 @@ import java.util.List;
 @Table(name = "Replies")
 public class Reply extends Model implements Parcelable {
 
+    public static final Parcelable.Creator<Reply> CREATOR
+            = new Parcelable.Creator<Reply>() {
+        public Reply createFromParcel(Parcel in) {
+            return new Reply(in);
+        }
+
+        public Reply[] newArray(int size) {
+            return new Reply[size];
+        }
+    };
+    @Column(name = "Post")
+    public Post post;
     @Column(name = "ImageFilePath")
     String imageFilePath;
-
     @Column(name = "Comment")
     String comment;
-
     @Column(name = "Author")
     String author;
-
     @Column(name = "Date")
     String dateCreated;
 
-    @Column(name = "Post")
-    public Post post;
-
     // Needed for ActiveAndroid library
-    public Reply() { super(); }
+    public Reply() {
+        super();
+    }
 
     public Reply(Post post, String author, String comment, String dateCreated, String imageFilePath) {
         super();
@@ -43,6 +47,13 @@ public class Reply extends Model implements Parcelable {
         this.comment = comment;
         this.dateCreated = dateCreated;
         this.imageFilePath = imageFilePath;
+    }
+
+    private Reply(Parcel in) {
+        imageFilePath = in.readString();
+        comment = in.readString();
+        author = in.readString();
+        dateCreated = in.readString();
     }
 
     public String getAuthor() {
@@ -77,8 +88,6 @@ public class Reply extends Model implements Parcelable {
         this.imageFilePath = imageFilePath;
     }
 
-
-
     @Override
     public int describeContents() {
         return 0;
@@ -90,23 +99,5 @@ public class Reply extends Model implements Parcelable {
         parcel.writeString(comment);
         parcel.writeString(author);
         parcel.writeString(dateCreated);
-    }
-
-    public static final Parcelable.Creator<Reply> CREATOR
-            = new Parcelable.Creator<Reply>() {
-        public Reply createFromParcel(Parcel in) {
-            return new Reply(in);
-        }
-
-        public Reply[] newArray(int size) {
-            return new Reply[size];
-        }
-    };
-
-    private Reply(Parcel in) {
-        imageFilePath = in.readString();
-        comment = in.readString();
-        author = in.readString();
-        dateCreated = in.readString();
     }
 }

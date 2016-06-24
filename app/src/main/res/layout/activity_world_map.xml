@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/worldMap_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
@@ -7,6 +8,17 @@
         android:id="@+id/map"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
+
+    <Button
+        android:id="@+id/worldMap_debugDeleteButton"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:text="D"
+        android:layout_marginTop="50dp"
+        android:layout_marginLeft="3dp"
+        android:background="@color/transparent_white"
+        android:onClick="onDeleteClick"/>
+
 
     <ImageView
         android:id="@+id/worldMap_addPostButton"

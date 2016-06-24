@@ -7,8 +7,24 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.PointF;
 import android.graphics.drawable.Drawable;
+import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.LinearSmoothScroller;
+import android.support.v7.widget.RecyclerView;
+import android.text.format.DateUtils;
+import android.view.View;
+import android.view.ViewTreeObserver;
+import android.view.animation.Interpolator;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
+import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
 import com.dmitry.drop.project.adapter.ReplyAdapter;
 import com.dmitry.drop.project.model.Post;
 import com.dmitry.drop.project.model.PostModel;
@@ -23,17 +39,6 @@ import com.hannesdorfmann.mosby.mvp.MvpActivity;
 import com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayout;
 import com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayoutDirection;
 
-import android.os.Bundle;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.LinearSmoothScroller;
-import android.support.v7.widget.RecyclerView;
-import android.text.format.DateUtils;
-import android.view.View;
-import android.view.inputmethod.InputMethodManager;
-import android.widget.ImageView;
-import android.widget.TextView;
-import android.widget.Toast;
-
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -45,41 +50,52 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 
+import static com.dmitry.drop.project.utility.AnimUtils.getFastOutSlowInInterpolator;
+
 /**
  * Created by Laptop on 15/06/2016.
  */
 public class ViewPostActivity extends MvpActivity<ViewPostView, ViewPostPresenter>
         implements ViewPostView {
 
+    private static final int REQUEST_CAMERA_PHOTO = 1;
     @BindView(R.id.viewPost_postImg)
     ImageView postImg;
-
     @BindView(R.id.viewPost_author)
     TextView postAuthor;
-
     @BindView(R.id.viewPost_annotation)
     TextView postAnnotation;
-
     @BindView(R.id.viewPost_timeElapsed)
     TextView postDateTime;
-
     @BindView(R.id.replyBar_comment)
     TextView replyComment;
-
     @BindView(R.id.viewPost_repliesRecyclerView)
     RecyclerView mRecyclerView;
-
     @BindView(R.id.viewPost_swipeRefreshLayout)
     SwipyRefreshLayout mRefreshLayout;
-
     @BindView(R.id.replyBar_imgSelectButton)
     ImageView replyImage;
-
-    private static final int REQUEST_CAMERA_PHOTO = 1;
-
+    @BindView(R.id.viewPost_postImgOverlay)
+    ImageView postImageOverlay;
+    @BindView(R.id.viewPost_accountLayout)
+    RelativeLayout viewPostAccountLayout;
+    @BindView(R.id.viewPost_layout)
+    RelativeLayout viewPostLayout;
+    @BindView(R.id.viewPost_heading)
+    RelativeLayout viewPostHeading;
+    @BindView(R.id.viewPost_postImgFrame)
+    RelativeLayout viewPostImgFrame;
+    @BindView(R.id.viewPost_repliesPlaceholder)
+    RelativeLayout repliesPlaceholder;
+    @BindView(R.id.viewPost_barLayout)
+    LinearLayout barLayout;
+    @BindView(R.id.viewPost_repliesLoading)
+    ProgressBar repliesLoading;
+    @BindView(R.id.viePost_noRepliesPlaceholder)
+    TextView noRepliesPlaceholder;
+    // TODO: See if you can remove any duplicate values
     PostModel postModel;
     ReplyModel replyModel;
-    private Bitmap mPostImg;
     private RecyclerView.Adapter mAdapter;
     private Post mPost;
     private String mImagePostFilePath;
@@ -88,9 +104,10 @@ public class ViewPostActivity extends MvpActivity<ViewPostView, ViewPostPresente
     private long mPostId;
     private boolean mInitialised;
 
-
+    // TODO: Pass post in so you won't have to bother with getting post
     public static Intent createIntent(Context context, long postId) {
         Intent intent = new Intent(context, ViewPostActivity.class);
+        // TODO: PutExtra constants :p
         intent.putExtra("postId", postId);
         return intent;
     }
@@ -102,6 +119,8 @@ public class ViewPostActivity extends MvpActivity<ViewPostView, ViewPostPresente
         replyModel = new ReplyModelImpl();
         return new ViewPostPresenterImpl(postModel, replyModel);
     }
+
+    // TODO: Separate this function into your first 3 methods, the setupView(), then showPost(post), then presenter.loadReplies()
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -116,16 +135,16 @@ public class ViewPostActivity extends MvpActivity<ViewPostView, ViewPostPresente
         mPost = postModel.getPost(mPostId);
         mImagePostFilePath = mPost.getImageFilePath();
 
+        barLayout.setAlpha(0f);
 
-        mPostImg = BitmapFactory.decodeFile(mImagePostFilePath);
-        postImg.setImageBitmap(mPostImg);
+        Glide.with(this).load(mImagePostFilePath).into(postImg);
+        Glide.with(this).load("").placeholder(getDrawable(R.drawable.post_img_overlay)).into(postImageOverlay);
 
         postAnnotation.setText(mPost.getAnnotation());
         postDateTime.setText(getPostTimeSpan());
 
         //load post replies from model
         presenter.loadReplies(mPostId);
-
 
         mRefreshLayout.setOnRefreshListener(new SwipyRefreshLayout.OnRefreshListener() {
             @Override
@@ -134,28 +153,84 @@ public class ViewPostActivity extends MvpActivity<ViewPostView, ViewPostPresente
             }
         });
 
+        viewPostLayout.getViewTreeObserver().addOnPreDrawListener(new ViewTreeObserver
+                .OnPreDrawListener() {
+            @Override
+            public boolean onPreDraw() {
+                viewPostLayout.getViewTreeObserver().removeOnPreDrawListener(this);
 
+                enterAnimation();
+                return true;
+            }
+        });
+    }
+
+    private void enterAnimation() {
+
+        Interpolator interp = getFastOutSlowInInterpolator(this);
+
+        int offset = viewPostHeading.getHeight();
+        viewEnterAnimation(viewPostHeading, offset, interp);
+
+        offset *= 1.5f;
+        viewEnterAnimation(postImg, offset, interp);
+
+        offset *= 1.5f;
+        viewEnterAnimation(mRefreshLayout, offset, interp);
+
+        enterAcountFrameAnimation(interp);
+
+        offset *= 1.0f;
+        viewEnterAnimation(barLayout, offset, interp);
+    }
+
+    private void enterAcountFrameAnimation(Interpolator interp) {
+        viewPostAccountLayout.setAlpha(0.0f);
+        viewPostAccountLayout.animate()
+                .alpha(1f)
+                .setStartDelay(500)
+                .setDuration(3000)
+                .setInterpolator(interp)
+                .setListener(null)
+                .start();
+    }
+
+    private void viewEnterAnimation(View view, float offset, Interpolator interp) {
+        view.setTranslationY(offset);
+        view.setAlpha(0.0f);
+        view.animate()
+                .translationY(0f)
+                .alpha(1f)
+                .setDuration(600)
+                .setInterpolator(interp)
+                .setListener(null)
+                .start();
     }
 
     private String getPostTimeSpan() {
+        // TODO: Naming conventions
         String string_date = mPost.getDateCreated();
         SimpleDateFormat f = new SimpleDateFormat("dd/MM/yyy HH:mm", Locale.US);
-        Date d = null;
+        Date d;
+
         try {
             d = f.parse(string_date);
+            long dateCreatedMilleseconds = d.getTime();
+            Toast.makeText(this, "Time = " + dateCreatedMilleseconds, Toast.LENGTH_SHORT).show();
+
+            // TODO: rename string s and use string resources
+            String s = DateUtils.getRelativeTimeSpanString(dateCreatedMilleseconds, new Date().getTime(), DateUtils.MINUTE_IN_MILLIS).toString();
+            //if less than a minute show "just now"
+            if (s.equals("0 minutes ago"))
+                return "Just now";
+
+            return s;
+
         } catch (ParseException e) {
             e.printStackTrace();
         }
-        long dateCreatedMilleseconds = 0;
-        if (d != null) {
-            dateCreatedMilleseconds = d.getTime();
-        }
-        return DateUtils.getRelativeTimeSpanString(dateCreatedMilleseconds, new Date().getTime(), DateUtils.MINUTE_IN_MILLIS).toString();
-
+        return "";
     }
-
-
-    // TODO: Move these onclick methods outside of interface
 
     @OnClick(R.id.replyBar_sendButton)
     public void onSendReplyClick() {
@@ -165,7 +240,6 @@ public class ViewPostActivity extends MvpActivity<ViewPostView, ViewPostPresente
 
         mRefreshLayout.setRefreshing(true);
         presenter.onSendReplyClick(mPost.getId(), author, annotation, date, mImageReplyFilePath);
-
     }
 
     private void closeSoftKeyboard() {
@@ -190,11 +264,18 @@ public class ViewPostActivity extends MvpActivity<ViewPostView, ViewPostPresente
         replyImage.setImageDrawable(getDrawable(android.R.drawable.ic_menu_camera));
     }
 
+    @Override
+    public void showRepliesLoading(boolean loading) {
+        if (loading)
+            repliesLoading.setVisibility(View.VISIBLE);
+        else
+            repliesLoading.setVisibility(View.INVISIBLE);
+    }
 
-    // TODO: Change signature to showReplies(List<Post>)
     @Override
     public void showReplies(List<Reply> replies) {
 
+        // TODO: Move to OnCreate
         //if activity is started, initialise recycler view and adapter
         if (!mInitialised) {
             mInitialised = true;
@@ -202,8 +283,6 @@ public class ViewPostActivity extends MvpActivity<ViewPostView, ViewPostPresente
             mAdapter = new ReplyAdapter(mReplies, this);
 
             mRecyclerView.setLayoutManager(new LinearLayoutManagerWithSmoothScroller(this));
-
-
             mRecyclerView.setAdapter(mAdapter);
             mRecyclerView.addItemDecoration(new SimpleDividerItemDecoration(this));
 
@@ -215,20 +294,26 @@ public class ViewPostActivity extends MvpActivity<ViewPostView, ViewPostPresente
             mRecyclerView.invalidate();
 
         }
-        if (replies.size() == 0)
+
+        // TODO: Add empty state here
+        if (replies.size() == 0) {
             mRecyclerView.smoothScrollToPosition(mReplies.size());
-        else
+            noRepliesPlaceholder.setVisibility(View.VISIBLE);
+
+        } else {
             mRecyclerView.smoothScrollToPosition(mReplies.size() - 1);
+            noRepliesPlaceholder.setVisibility(View.INVISIBLE);
+        }
     }
 
-    @Override
     @OnClick(R.id.replyBar_imgSelectButton)
     public void onSelectImageClick() {
         presenter.onSelectImageClick();
     }
 
     @Override
-    public void selectImage() {
+    public void takeReplyPicture() {
+        // TODO: Create intent
         Intent takePhoto = new Intent(this, CameraActivity.class);
         startActivityForResult(takePhoto, REQUEST_CAMERA_PHOTO);
     }
@@ -238,6 +323,7 @@ public class ViewPostActivity extends MvpActivity<ViewPostView, ViewPostPresente
         super.onActivityResult(requestCode, resultCode, data);
 
         if (requestCode == REQUEST_CAMERA_PHOTO && resultCode == RESULT_OK) {
+            // TODO: PutExtra Constants
             mImageReplyFilePath = data.getStringExtra("imageFilePath");
 
             setReplyThumbnail();
@@ -251,6 +337,7 @@ public class ViewPostActivity extends MvpActivity<ViewPostView, ViewPostPresente
         replyImage.setImageBitmap(Bitmap.createScaledBitmap(bitmap, 50, 50, false));
     }
 
+    //Recycler View classes
     private class SimpleDividerItemDecoration extends RecyclerView.ItemDecoration {
         private Drawable mDivider;
 

@@ -1,27 +1,6 @@
 package com.dmitry.drop.project;
 
 
-import com.dmitry.drop.project.model.Post;
-import com.dmitry.drop.project.presenter.WorldMapPresenter;
-import com.dmitry.drop.project.presenter.WorldMapPresenterImpl;
-import com.dmitry.drop.project.utility.Constants;
-import com.dmitry.drop.project.view.WorldMapView;
-import com.dmitry.drop.project.utility.PermissionUtils;
-
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.GoogleApiAvailability;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.location.LocationRequest;
-import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.maps.CameraUpdateFactory;
-import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.MapView;
-import com.google.android.gms.maps.OnMapReadyCallback;
-import com.google.android.gms.maps.model.CameraPosition;
-import com.google.android.gms.maps.model.CircleOptions;
-import com.google.android.gms.maps.model.LatLng;
-import com.hannesdorfmann.mosby.mvp.MvpActivity;
-
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -31,6 +10,33 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
+import android.view.View;
+import android.widget.Button;
+import android.widget.RelativeLayout;
+
+import com.dmitry.drop.project.model.Post;
+import com.dmitry.drop.project.model.PostModelImpl;
+import com.dmitry.drop.project.presenter.WorldMapPresenter;
+import com.dmitry.drop.project.presenter.WorldMapPresenterImpl;
+import com.dmitry.drop.project.utility.Constants;
+import com.dmitry.drop.project.utility.PermissionUtils;
+import com.dmitry.drop.project.view.CreatePostView;
+import com.dmitry.drop.project.view.WorldMapView;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GoogleApiAvailability;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.MapView;
+import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.CameraPosition;
+import com.google.android.gms.maps.model.CircleOptions;
+import com.google.android.gms.maps.model.GroundOverlayOptions;
+import com.google.android.gms.maps.model.LatLng;
+import com.hannesdorfmann.mosby.mvp.MvpActivity;
 
 import java.util.Collections;
 import java.util.List;
@@ -50,49 +56,42 @@ public class WorldMapActivity extends MvpActivity<WorldMapView, WorldMapPresente
         GoogleMap.OnCameraChangeListener,
         GoogleMap.OnMyLocationButtonClickListener {
 
-
-    @BindView(R.id.map)
-    MapView mMapView;
-
-    private GoogleMap mMap;
-    private Location mLastLocation;
-
-    // Google client to interact with Google API
-    private GoogleApiClient mGoogleApiClient;
-
-    // boolean flag to toggle periodic location updates
-    private boolean mRequestingLocationUpdates = false;
-
-    private LocationRequest mLocationRequest;
-
-    private boolean mCameraTracking = true;
-
+    static final int ADD_POST_REQUEST = 1;
+    static final int VIEW_POST_REQUEST = 2;
     //Google Play request codes
     private final static int PLAY_SERVICES_RESOLUTION_REQUEST = 1000;
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1;
-
-    static final int ADD_POST_REQUEST = 1;
-    static final int VIEW_POST_REQUEST = 2;
-
     //Default Circle variable
     private final static int RADIUS = 100;
-
+    @BindView(R.id.map)
+    MapView mMapView;
+    @BindView(R.id.worldMap_layout)
+    RelativeLayout worldMapLayout;
+    @BindView(R.id.worldMap_debugDeleteButton)
+    Button debugDeleteButton;
+    private GoogleMap mMap;
+    private Location mLastLocation;
+    // Google client to interact with Google API
+    private GoogleApiClient mGoogleApiClient;
+    // boolean flag to toggle periodic location updates
+    private boolean mRequestingLocationUpdates = false;
+    private LocationRequest mLocationRequest;
+    private boolean mCameraTracking = true;
+    private boolean debugDelete = false;
     //Databese
-    private List<Post> posts;
+    private List<Post> posts = Collections.emptyList();
+    private PostModelImpl postModel;
 
     /* ------------------------ Activity Lifecycle Methods ------------------------ */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_world_map);
+
         ButterKnife.bind(this);
 
-        PermissionUtils.verifyStoragePermissions(this);
 
-        // TODO: Move to model
-        posts = Post.getAll();
-        if (posts == null)
-            posts = Collections.emptyList();
+        PermissionUtils.verifyStoragePermissions(this);
 
         if (mMapView != null) {
             mMapView.onCreate(savedInstanceState);
@@ -103,6 +102,8 @@ public class WorldMapActivity extends MvpActivity<WorldMapView, WorldMapPresente
         if (checkPlayServices()) {
             buildGoogleApiClient();
         }
+
+        presenter.onStart();
     }
 
     @Override
@@ -137,18 +138,19 @@ public class WorldMapActivity extends MvpActivity<WorldMapView, WorldMapPresente
         mMapView.onLowMemory();
     }
 
+    /* ------------------------ Mosby Methods ------------------------ */
+
     @Override
     protected void onDestroy() {
         mMapView.onDestroy();
         super.onDestroy();
     }
 
-    /* ------------------------ Mosby Methods ------------------------ */
-
     @NonNull
     @Override
     public WorldMapPresenter createPresenter() {
-        return new WorldMapPresenterImpl();
+        postModel = new PostModelImpl();
+        return new WorldMapPresenterImpl(postModel);
     }
 
     /* ------------------------ Implemented View Methods ------------------------ */
@@ -165,12 +167,10 @@ public class WorldMapActivity extends MvpActivity<WorldMapView, WorldMapPresente
 
             mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
         }
-
-
     }
 
     @Override
-    public void addPost() {
+    public void createPost() {
         if (mLastLocation != null) {
 
             Intent cameraIntent = CreatePostActivity.createIntent(this, mLastLocation.getLatitude(), mLastLocation.getLongitude());
@@ -180,14 +180,29 @@ public class WorldMapActivity extends MvpActivity<WorldMapView, WorldMapPresente
 
     @Override
     public void viewPost(Post post) {
-        Intent viewPost = ViewPostActivity.createIntent(this, post.getId());
+        if (debugDelete) {
+            postModel.delete(post.getId());
+            mMap.clear();
+            mMapView.invalidate();
+            posts = postModel.getAllPosts();
+            drawAllPosts();
+        } else {
+            Intent viewPost = ViewPostActivity.createIntent(this, post.getId());
 
-        //Toast.makeText(this,  reply.getId().toString() + "", Toast.LENGTH_SHORT).show();
+            startActivityForResult(viewPost, VIEW_POST_REQUEST);
+        }
+    }
 
+    @Override
+    public void showPosts(List<Post> posts) {
+        this.posts = posts;
+        drawAllPosts();
+    }
 
-        startActivityForResult(viewPost, VIEW_POST_REQUEST);
-
-        //Toast.makeText(this, "I am Clicked", Toast.LENGTH_SHORT).show();
+    @Override
+    public void addPost(Post post) {
+        posts.add(post);
+        drawPost(post);
     }
 
     @Override
@@ -195,27 +210,31 @@ public class WorldMapActivity extends MvpActivity<WorldMapView, WorldMapPresente
         super.onActivityResult(requestCode, resultCode, data);
 
         if (requestCode == ADD_POST_REQUEST && resultCode == RESULT_OK) {
-
-            double latitude = data.getDoubleExtra(Constants.LATITUDE, 0);
-            double longitude = data.getDoubleExtra(Constants.LONGITUDE, 0);
-
-            CircleOptions circleOptions = new CircleOptions()
-                    .center(new LatLng(latitude, longitude))
-                    .radius(RADIUS);
-
-
-            circleOptions.strokeColor(ContextCompat.getColor(this, R.color.blue));
-            circleOptions.fillColor(ContextCompat.getColor(this, R.color.light_blue));
-
-            mMap.addCircle(circleOptions);
-
-            // TODO: Move to model
-            posts = Post.getAll();
+            presenter.onPostCreated(data.getLongExtra(CreatePostView.POST_ID_EXTRA, -1));
         }
+    }
 
+    private void addPostThumbnail(Post post) {
+        LatLng postPosition = new LatLng(post.getLatitude(), post.getLongitude());
+        GroundOverlayOptions postPicture = new GroundOverlayOptions()
+                .image(BitmapDescriptorFactory.fromPath(post.getThumbnailFilePath()))
+                .position(postPosition, (float) post.getRadius() + Constants.POST_RADIUS_OFFSET)
+                .transparency(Constants.POST_THUMB_TRANSPARENCY);
+
+        mMap.addGroundOverlay(postPicture);
     }
 
     /* ------------------------ Google Maps Methods ------------------------ */
+
+    private void addPostCircle(double latitude, double longitude) {
+        CircleOptions circleOptions = new CircleOptions()
+                .center(new LatLng(latitude, longitude))
+                .radius(RADIUS);
+
+        circleOptions.strokeColor(ContextCompat.getColor(this, R.color.blue));
+        circleOptions.fillColor(ContextCompat.getColor(this, R.color.light_blue));
+        mMap.addCircle(circleOptions);
+    }
 
     @Override
     public void onMapReady(GoogleMap map) {
@@ -224,21 +243,21 @@ public class WorldMapActivity extends MvpActivity<WorldMapView, WorldMapPresente
         map.setOnCameraChangeListener(this);
         map.setOnMyLocationButtonClickListener(this);
 
+        drawAllPosts();
+    }
+
+    private void drawAllPosts() {
         for (Post post : posts) {
-
-            CircleOptions circleOptions = new CircleOptions()
-                    .center(new LatLng(post.getLatitude(), post.getLongitude()))
-                    .radius(RADIUS);
-
-
-            circleOptions.strokeColor(ContextCompat.getColor(this, R.color.blue));
-            circleOptions.fillColor(ContextCompat.getColor(this, R.color.light_blue));
-
-            mMap.addCircle(circleOptions);
+            drawPost(post);
         }
     }
 
     /* ------------------------ Google Services Methods ------------------------ */
+
+    private void drawPost(Post post) {
+        addPostCircle(post.getLatitude(), post.getLongitude());
+        addPostThumbnail(post);
+    }
 
     private boolean checkPlayServices() {
         GoogleApiAvailability apiAvailability = GoogleApiAvailability.getInstance();
@@ -350,11 +369,8 @@ public class WorldMapActivity extends MvpActivity<WorldMapView, WorldMapPresente
         // Assign the new location
         mLastLocation = location;
 
-        //presenter.onLocationClicked(mLastLocation.getLongitude(), mLastLocation.getLatitude());
         if (mCameraTracking)
             moveCameraToMyLocation();
-
-
     }
 
     @Override
@@ -362,6 +378,8 @@ public class WorldMapActivity extends MvpActivity<WorldMapView, WorldMapPresente
         Log.i("debug", "Connection failed: ConnectionResult.getErrorCode() = "
                 + connectionResult.getErrorCode());
     }
+
+     /* ------------------------ OnClick Methods ------------------------ */
 
     private void enableMyLocation() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
@@ -375,11 +393,9 @@ public class WorldMapActivity extends MvpActivity<WorldMapView, WorldMapPresente
         }
     }
 
-     /* ------------------------ OnClick Methods ------------------------ */
-
     @OnClick(R.id.worldMap_addPostButton)
     public void onAddClick() {
-        presenter.onAddPostClick();
+        presenter.onCreatePostClick();
     }
 
     @Override
@@ -398,5 +414,15 @@ public class WorldMapActivity extends MvpActivity<WorldMapView, WorldMapPresente
     public boolean onMyLocationButtonClick() {
         mCameraTracking = true;
         return false;
+    }
+
+    public void onDeleteClick(View view) {
+        if (!debugDelete) {
+            debugDelete = true;
+            debugDeleteButton.setBackgroundColor(ContextCompat.getColor(this, R.color.grey));
+        } else {
+            debugDeleteButton.setBackgroundColor(ContextCompat.getColor(this, R.color.transparent_white));
+            debugDelete = false;
+        }
     }
 }

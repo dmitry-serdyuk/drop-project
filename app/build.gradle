@@ -33,5 +33,8 @@ dependencies {
     compile 'com.android.support:design:23.4.0'
     compile 'com.michaelpardo:activeandroid:3.1.0-SNAPSHOT'
     compile 'com.github.orangegangsters:swipy:1.2.3@aar'
+    compile 'de.hdodenhof:circleimageview:2.0.0'
+    compile 'com.github.bumptech.glide:glide:3.7.0'
+    
     apt 'com.jakewharton:butterknife-compiler:8.0.1'
 }

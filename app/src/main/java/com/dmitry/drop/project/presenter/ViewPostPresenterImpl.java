@@ -1,28 +1,18 @@
 package com.dmitry.drop.project.presenter;
 
-import android.text.format.DateUtils;
-
-import com.activeandroid.query.Select;
-import com.dmitry.drop.project.model.Post;
 import com.dmitry.drop.project.model.PostModel;
-import com.dmitry.drop.project.model.RepliesAsyncLoader;
 import com.dmitry.drop.project.model.Reply;
 import com.dmitry.drop.project.model.ReplyModel;
 import com.dmitry.drop.project.view.ViewPostView;
 import com.hannesdorfmann.mosby.mvp.MvpBasePresenter;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 
 /**
  * Created by Laptop on 15/06/2016.
  */
 public class ViewPostPresenterImpl extends MvpBasePresenter<ViewPostView> implements ViewPostPresenter {
 
-    private RepliesAsyncLoader repliesLoader;
     private PostModel postModel;
     private ReplyModel replyModel;
 
@@ -37,10 +27,14 @@ public class ViewPostPresenterImpl extends MvpBasePresenter<ViewPostView> implem
     }
 
     private void getReplies(long postId) {
+        if (isViewAttached()) {
+            getView().showRepliesLoading(true);
+        }
         postModel.getReplies(postId, new PostModel.GetRepliesCallback() {
             @Override
             public void onSuccess(List<Reply> replies) {
                 if (isViewAttached()) {
+                    getView().showRepliesLoading(false);
                     getView().showReplies(replies);
                 }
             }
@@ -56,14 +50,21 @@ public class ViewPostPresenterImpl extends MvpBasePresenter<ViewPostView> implem
 
     @Override
     public void onSendReplyClick(long postId, String author, String annotation, String date, String imageFilePath) {
-        // TODO: Use callback with model
-        Post post;
-        if (postId != -1) {
-            post = postModel.getPost(postId);
+        // Show loading spinner
 
-            replyModel.saveReply(post, author, annotation, date, imageFilePath);
+        // Do post model thing
+
+        // In success and error of callback, first thing you do is dismiss loading spinner
+
+        // Show saveReplyLoading instead of reusing replies loading
+
+        // TODO: Use CALLBACK with model
+        if (postId != -1) {
+            // Implement this signature postModel.saveReply(postId, author, annotation, date, imageFilePath);
+            postModel.saveReply(postId, author, annotation, date, imageFilePath);
         }
 
+        // TODO: Should be done after onSuccess of savingReply
         getReplies(postId);
         clearReplyBox();
     }
@@ -76,7 +77,7 @@ public class ViewPostPresenterImpl extends MvpBasePresenter<ViewPostView> implem
     @Override
     public void onSelectImageClick() {
         if (isViewAttached())
-            getView().selectImage();
+            getView().takeReplyPicture();
     }
 
 }

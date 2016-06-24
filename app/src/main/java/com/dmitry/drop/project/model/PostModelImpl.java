@@ -11,8 +11,12 @@ import java.util.List;
 public class PostModelImpl implements PostModel {
 
     @Override
-    public void savePost(String annotationText, String mImageFilePath, long mLatitude, long mLongitude, String date) {
-
+    public long savePost(String annotationText, String cameraImgFilePath,
+                         String thumbnailImgFilePath, double latitude, double longitude, String date) {
+        Post post = new Post(annotationText, cameraImgFilePath,
+                thumbnailImgFilePath, latitude, longitude, date);
+        post.save();
+        return post.getId();
     }
 
     @Override
@@ -41,7 +45,29 @@ public class PostModelImpl implements PostModel {
     }
 
     @Override
-    public Post getPost(long postId) {
-        return new Select().from(Post.class).where("id = ?", postId).executeSingle();
+    public void getPost(long postId, GetPostCallback callback) {
+        Post post = new Select().from(Post.class).where("id = ?", postId).executeSingle();
+        if (post != null) {
+            callback.onSuccess(post);
+        } else {
+            callback.onError("Don't have a post with that id.");
+        }
+    }
+
+
+    @Override
+    public List<Post> getAllPosts() {
+        return Post.getAll();
+    }
+
+    //Debug
+    @Override
+    public void delete(long postId) {
+        Post post = new Select().from(Post.class).where("id = ?", postId).executeSingle();
+        List<Reply> replies = post.replies();
+        for (Reply reply : replies) {
+            reply.delete();
+        }
+        post.delete();
     }
 }

@@ -2,23 +2,14 @@ package com.dmitry.drop.project.model;
 
 import android.os.AsyncTask;
 
-import java.util.List;
-
 /**
  * Created by Laptop on 15/06/2016.
  */
 public class RepliesAsyncLoader extends AsyncTask<Void, Void, Void> {
 
 
-    public interface RepliesLoaderListener {
-        public void onSuccess();
-
-        public void onError(Exception e);
-    }
-
     private boolean shouldFail;
     private RepliesLoaderListener listener;
-
     public RepliesAsyncLoader(RepliesLoaderListener listener) {
         this.listener = listener;
     }
@@ -38,5 +29,11 @@ public class RepliesAsyncLoader extends AsyncTask<Void, Void, Void> {
     protected void onPostExecute(Void aVoid) {
         super.onPostExecute(aVoid);
         listener.onSuccess();
+    }
+
+    public interface RepliesLoaderListener {
+        public void onSuccess();
+
+        public void onError(Exception e);
     }
 }

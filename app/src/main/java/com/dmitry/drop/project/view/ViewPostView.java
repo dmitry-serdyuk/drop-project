@@ -2,7 +2,6 @@ package com.dmitry.drop.project.view;
 
 import com.dmitry.drop.project.model.Reply;
 import com.hannesdorfmann.mosby.mvp.MvpView;
-import com.hannesdorfmann.mosby.mvp.lce.MvpLceView;
 
 import java.util.List;
 
@@ -16,11 +15,11 @@ public interface ViewPostView extends MvpView {
 
     void showReplies(List<Reply> replies);
 
-    void onSelectImageClick();
-
-    void selectImage();
+    void takeReplyPicture();
 
     void showReplyLoadingError();
 
     void clearReplyBox();
+
+    void showRepliesLoading(boolean loading);
 }
