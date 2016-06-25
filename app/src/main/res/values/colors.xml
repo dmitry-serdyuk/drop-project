@@ -9,7 +9,8 @@
     <color name="feint_blue">#dcdee3</color>
 
     <color name="blue">#0096ff</color>
-    <color name="light_blue">#100096ff</color>
+    <color name="light_blue_transp">#100096ff</color>
+    <color name="light_blue_50_transp">#700096ff</color>
     <color name="grey">#9197a3</color>
     <color name="white">#ffffff</color>
     <color name="carbon_black">#99313131</color>

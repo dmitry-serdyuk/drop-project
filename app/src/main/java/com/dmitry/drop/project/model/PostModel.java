@@ -7,20 +7,22 @@ import java.util.List;
  */
 public interface PostModel {
 
-    // TODO: Make all methods void and follow same process as getReplies
-
-    long savePost(String annotationText, String cameraImgFilePath, String thumbnailImgFilePath,
+    Post savePost(String annotationText, String cameraImgFilePath, String thumbnailImgFilePath,
                   double latitude, double longitude, String date);
 
-    void getReplies(long postId, GetRepliesCallback callback);
+    void getReplies(Post post, GetRepliesCallback callback);
 
     void getPost(long postId, GetPostCallback callback);
 
-    List<Post> getAllPosts();
+    void getAllPosts(GetAllPostsCallback callback);
 
-    //Debug Method
+    void saveReply(Post post, String author, String annotation, String date, String imageFilePath, SaveReplyCallback callback);
+
+    //debug Method
     void delete(long postId);
 
+
+    //callbacks
     interface GetRepliesCallback {
         void onSuccess(List<Reply> replies);
 
@@ -32,4 +34,17 @@ public interface PostModel {
 
         void onError(String error);
     }
+
+    interface GetAllPostsCallback {
+        void onSuccess(List<Post> posts);
+
+        void onError(String error);
+    }
+
+    interface SaveReplyCallback {
+        void onSuccess();
+
+        void onError(String error);
+    }
+
 }

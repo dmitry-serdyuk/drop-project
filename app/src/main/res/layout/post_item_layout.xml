@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="300dp"
+    android:paddingBottom="5dp"
+    android:paddingTop="5dp">
+
+    <ImageView
+
+        android:id="@+id/postItem_image"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:transitionName="@string/post_transition_name"/>
+
+
+
+    <ImageView
+        android:id="@+id/viewPost_postImgOverlay"
+        android:layout_width="match_parent"
+        android:src="@drawable/post_img_overlay"
+        android:layout_height="match_parent"
+        android:scaleType="fitXY" />
+
+    <ImageView
+        android:layout_width="75dp"
+        android:layout_height="50dp"
+        android:src="@drawable/view_icon"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"
+        android:layout_margin="10dp"/>
+
+</RelativeLayout>

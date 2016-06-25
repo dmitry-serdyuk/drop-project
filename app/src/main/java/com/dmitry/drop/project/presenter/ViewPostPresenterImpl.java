@@ -1,5 +1,6 @@
 package com.dmitry.drop.project.presenter;
 
+import com.dmitry.drop.project.model.Post;
 import com.dmitry.drop.project.model.PostModel;
 import com.dmitry.drop.project.model.Reply;
 import com.dmitry.drop.project.model.ReplyModel;
@@ -14,23 +15,17 @@ import java.util.List;
 public class ViewPostPresenterImpl extends MvpBasePresenter<ViewPostView> implements ViewPostPresenter {
 
     private PostModel postModel;
-    private ReplyModel replyModel;
 
-    public ViewPostPresenterImpl(PostModel postModel, ReplyModel replyModel) {
+    public ViewPostPresenterImpl(PostModel postModel) {
         this.postModel = postModel;
-        this.replyModel = replyModel;
     }
 
     @Override
-    public void loadReplies(final long postId) {
-        getReplies(postId);
-    }
-
-    private void getReplies(long postId) {
+    public void getReplies(Post post) {
         if (isViewAttached()) {
             getView().showRepliesLoading(true);
         }
-        postModel.getReplies(postId, new PostModel.GetRepliesCallback() {
+        postModel.getReplies(post, new PostModel.GetRepliesCallback() {
             @Override
             public void onSuccess(List<Reply> replies) {
                 if (isViewAttached()) {
@@ -49,24 +44,21 @@ public class ViewPostPresenterImpl extends MvpBasePresenter<ViewPostView> implem
     }
 
     @Override
-    public void onSendReplyClick(long postId, String author, String annotation, String date, String imageFilePath) {
-        // Show loading spinner
+    public void onSendReplyClick(final Post post, String author, String annotation, String date, String imageFilePath) {
+        postModel.saveReply(post, author, annotation, date, imageFilePath, new PostModel.SaveReplyCallback() {
+            @Override
+            public void onSuccess() {
+                getReplies(post);
+                clearReplyBox();
+            }
 
-        // Do post model thing
-
-        // In success and error of callback, first thing you do is dismiss loading spinner
-
-        // Show saveReplyLoading instead of reusing replies loading
-
-        // TODO: Use CALLBACK with model
-        if (postId != -1) {
-            // Implement this signature postModel.saveReply(postId, author, annotation, date, imageFilePath);
-            postModel.saveReply(postId, author, annotation, date, imageFilePath);
-        }
-
-        // TODO: Should be done after onSuccess of savingReply
-        getReplies(postId);
-        clearReplyBox();
+            @Override
+            public void onError(String error) {
+                if (isViewAttached()) {
+                    getView().showSendReplyError(error);
+                }
+            }
+        });
     }
 
     private void clearReplyBox() {

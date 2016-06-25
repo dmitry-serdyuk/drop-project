@@ -1,5 +1,6 @@
 package com.dmitry.drop.project.presenter;
 
+import com.dmitry.drop.project.model.Post;
 import com.dmitry.drop.project.view.ViewPostView;
 import com.hannesdorfmann.mosby.mvp.MvpPresenter;
 
@@ -8,9 +9,9 @@ import com.hannesdorfmann.mosby.mvp.MvpPresenter;
  */
 public interface ViewPostPresenter extends MvpPresenter<ViewPostView> {
 
-    void loadReplies(long postId);
+    void getReplies(Post post);
 
-    void onSendReplyClick(long postId, String author, String annotation, String date, String imageFilePath);
+    void onSendReplyClick(Post post, String author, String annotation, String date, String imageFilePath);
 
     void onSelectImageClick();
 }

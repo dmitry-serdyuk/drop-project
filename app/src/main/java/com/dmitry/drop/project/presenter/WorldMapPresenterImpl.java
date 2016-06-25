@@ -6,6 +6,8 @@ import com.dmitry.drop.project.model.PostModel;
 import com.dmitry.drop.project.view.WorldMapView;
 import com.hannesdorfmann.mosby.mvp.MvpBasePresenter;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -32,34 +34,49 @@ public class WorldMapPresenterImpl extends MvpBasePresenter<WorldMapView> implem
     }
 
     @Override
-    public void onMapClicked(List<Post> posts, double latitude, double longitude) {
-        boolean clicked = false;
-        Post clickedPost = new Post();
+    public void onMapClicked(final double latitude, final double longitude) {
 
+        postModel.getAllPosts(new PostModel.GetAllPostsCallback() {
+            @Override
+            public void onSuccess(List<Post> posts) {
+                getClickedPosts(posts, latitude, longitude);
+            }
+
+            @Override
+            public void onError(String error) {
+                if (isViewAttached())
+                    getView().showClickPostError(error);
+            }
+        });
+    }
+
+    private void getClickedPosts(List<Post> posts, double latitude, double longitude) {
+        List<Post> clickedPosts = new ArrayList<Post>();
         for (Post post : posts) {
-
             if (post.isWithinRadius(latitude, longitude)) {
-                clickedPost = post;
-                clicked = true;
-                break;
+                clickedPosts.add(post);
             }
         }
 
-        if (clicked) {
-            if (isViewAttached())
-                // TODO: Do this instead getView().showPostSelector(List<Post> post)
-                getView().viewPost(clickedPost);
-        }
+        if (isViewAttached())
+            getView().showPostSelector(clickedPosts);
     }
 
     @Override
     public void onStart() {
-        // TODO: Change this to callback
-        List posts = postModel.getAllPosts();
+        postModel.getAllPosts(new PostModel.GetAllPostsCallback() {
+            @Override
+            public void onSuccess(List<Post> posts) {
+                if (isViewAttached())
+                    getView().showPosts(posts);
+            }
 
-        if (isViewAttached())
-            getView().showPosts(posts);
-
+            @Override
+            public void onError(String error) {
+                if (isViewAttached())
+                    getView().showLoadingPostsError(error);
+            }
+        });
     }
 
     @Override

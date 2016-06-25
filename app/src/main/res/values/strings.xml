@@ -12,5 +12,7 @@
     <string name="photo_error">Could not take a photo</string>
     <string name="reply_loading_error">Could not load post replies. Please try again later.</string>
     <string name="just_now_text">Just now</string>
+    <string name="zero_minutes_ago_text">0 minutes ago</string>
+    <string name="post_transition_name">postImgTransition</string>
 
 </resources>

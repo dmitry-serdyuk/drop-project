@@ -19,4 +19,12 @@ public interface WorldMapView extends MvpView {
     void showPosts(List<Post> posts);
 
     void addPost(Post post);
+
+    void showPostSelector(List<Post> clickedPosts);
+
+    void showClickPostError(String error);
+
+    void showLoadingPostsError(String error);
+
+    void showAddPostError(String error);
 }

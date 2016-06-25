@@ -10,9 +10,11 @@ import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.LinearLayoutManager;
+import com.dmitry.drop.project.utility.RecyclerViewUtils.*;
 import android.support.v7.widget.LinearSmoothScroller;
 import android.support.v7.widget.RecyclerView;
 import android.text.format.DateUtils;
+import android.transition.Slide;
 import android.view.View;
 import android.view.ViewTreeObserver;
 import android.view.animation.Interpolator;
@@ -42,6 +44,7 @@ import com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayoutD
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -93,34 +96,24 @@ public class ViewPostActivity extends MvpActivity<ViewPostView, ViewPostPresente
     ProgressBar repliesLoading;
     @BindView(R.id.viePost_noRepliesPlaceholder)
     TextView noRepliesPlaceholder;
-    // TODO: See if you can remove any duplicate values
-    PostModel postModel;
-    ReplyModel replyModel;
+
     private RecyclerView.Adapter mAdapter;
     private Post mPost;
     private String mImagePostFilePath;
     private String mImageReplyFilePath;
-    private List<Reply> mReplies;
-    private long mPostId;
-    private boolean mInitialised;
+    private List<Reply> mReplies = new ArrayList<>();
 
-    // TODO: Pass post in so you won't have to bother with getting post
-    public static Intent createIntent(Context context, long postId) {
+    public static Intent createIntent(Context context, Post post) {
         Intent intent = new Intent(context, ViewPostActivity.class);
-        // TODO: PutExtra constants :p
-        intent.putExtra("postId", postId);
+        intent.putExtra(POST_EXTRA, post);
         return intent;
     }
 
     @NonNull
     @Override
     public ViewPostPresenter createPresenter() {
-        postModel = new PostModelImpl();
-        replyModel = new ReplyModelImpl();
-        return new ViewPostPresenterImpl(postModel, replyModel);
+        return new ViewPostPresenterImpl(new PostModelImpl());
     }
-
-    // TODO: Separate this function into your first 3 methods, the setupView(), then showPost(post), then presenter.loadReplies()
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -128,28 +121,31 @@ public class ViewPostActivity extends MvpActivity<ViewPostView, ViewPostPresente
         setContentView(R.layout.activity_view_post);
         ButterKnife.bind(this);
 
-        mInitialised = false;
-        replyImage.setAdjustViewBounds(true);
         Intent viewPost = getIntent();
-        mPostId = viewPost.getLongExtra("postId", -1);
-        mPost = postModel.getPost(mPostId);
-        mImagePostFilePath = mPost.getImageFilePath();
+        mPost = viewPost.getParcelableExtra(POST_EXTRA);
 
-        barLayout.setAlpha(0f);
-
-        Glide.with(this).load(mImagePostFilePath).into(postImg);
-        Glide.with(this).load("").placeholder(getDrawable(R.drawable.post_img_overlay)).into(postImageOverlay);
-
-        postAnnotation.setText(mPost.getAnnotation());
-        postDateTime.setText(getPostTimeSpan());
+        setupView();
+        showPost();
 
         //load post replies from model
-        presenter.loadReplies(mPostId);
+        presenter.getReplies(mPost);
+        mAdapter = new ReplyAdapter(mReplies, this);
+        mRecyclerView.setAdapter(mAdapter);
+    }
+
+    private void setupView() {
+        replyImage.setAdjustViewBounds(true);
+        mImagePostFilePath = mPost.getImageFilePath();
+        barLayout.setAlpha(0f);
+
+        mRecyclerView.setLayoutManager(new LinearLayoutManagerWithSmoothScroller(this));
+
+        mRecyclerView.addItemDecoration(new SimpleDividerItemDecoration(this));
 
         mRefreshLayout.setOnRefreshListener(new SwipyRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh(SwipyRefreshLayoutDirection direction) {
-                presenter.loadReplies(mPostId);
+                presenter.getReplies(mPost);
             }
         });
 
@@ -158,11 +154,18 @@ public class ViewPostActivity extends MvpActivity<ViewPostView, ViewPostPresente
             @Override
             public boolean onPreDraw() {
                 viewPostLayout.getViewTreeObserver().removeOnPreDrawListener(this);
-
                 enterAnimation();
                 return true;
             }
         });
+    }
+
+    private void showPost() {
+        Glide.with(this).load(mImagePostFilePath).into(postImg);
+        Glide.with(this).load("").placeholder(getDrawable(R.drawable.post_img_overlay)).into(postImageOverlay);
+
+        postAnnotation.setText(mPost.getAnnotation());
+        postDateTime.setText(getPostTimeSpan());
     }
 
     private void enterAnimation() {
@@ -178,13 +181,13 @@ public class ViewPostActivity extends MvpActivity<ViewPostView, ViewPostPresente
         offset *= 1.5f;
         viewEnterAnimation(mRefreshLayout, offset, interp);
 
-        enterAcountFrameAnimation(interp);
+        enterAccountFrameAnimation(interp);
 
         offset *= 1.0f;
         viewEnterAnimation(barLayout, offset, interp);
     }
 
-    private void enterAcountFrameAnimation(Interpolator interp) {
+    private void enterAccountFrameAnimation(Interpolator interp) {
         viewPostAccountLayout.setAlpha(0.0f);
         viewPostAccountLayout.animate()
                 .alpha(1f)
@@ -208,28 +211,23 @@ public class ViewPostActivity extends MvpActivity<ViewPostView, ViewPostPresente
     }
 
     private String getPostTimeSpan() {
-        // TODO: Naming conventions
-        String string_date = mPost.getDateCreated();
-        SimpleDateFormat f = new SimpleDateFormat("dd/MM/yyy HH:mm", Locale.US);
-        Date d;
+        String dateCreated = mPost.getDateCreated();
+        SimpleDateFormat format = new SimpleDateFormat("dd/MM/yyy HH:mm", Locale.US);
+        Date parsedDate;
+        String timeSpan = null;
 
         try {
-            d = f.parse(string_date);
-            long dateCreatedMilleseconds = d.getTime();
-            Toast.makeText(this, "Time = " + dateCreatedMilleseconds, Toast.LENGTH_SHORT).show();
+            parsedDate = format.parse(dateCreated);
+            long dateCreatedMilliseconds = parsedDate.getTime();
 
-            // TODO: rename string s and use string resources
-            String s = DateUtils.getRelativeTimeSpanString(dateCreatedMilleseconds, new Date().getTime(), DateUtils.MINUTE_IN_MILLIS).toString();
+            timeSpan = DateUtils.getRelativeTimeSpanString(dateCreatedMilliseconds, new Date().getTime(), DateUtils.MINUTE_IN_MILLIS).toString();
             //if less than a minute show "just now"
-            if (s.equals("0 minutes ago"))
-                return "Just now";
-
-            return s;
-
+            if (timeSpan.equals(getString(R.string.zero_minutes_ago_text)))
+                return getString(R.string.just_now_text);
         } catch (ParseException e) {
             e.printStackTrace();
         }
-        return "";
+        return timeSpan;
     }
 
     @OnClick(R.id.replyBar_sendButton)
@@ -239,7 +237,7 @@ public class ViewPostActivity extends MvpActivity<ViewPostView, ViewPostPresente
         String date = DateFormat.getInstance().format(new Date());
 
         mRefreshLayout.setRefreshing(true);
-        presenter.onSendReplyClick(mPost.getId(), author, annotation, date, mImageReplyFilePath);
+        presenter.onSendReplyClick(mPost, author, annotation, date, mImageReplyFilePath);
     }
 
     private void closeSoftKeyboard() {
@@ -260,7 +258,6 @@ public class ViewPostActivity extends MvpActivity<ViewPostView, ViewPostPresente
         closeSoftKeyboard();
         mImageReplyFilePath = null;
         replyComment.setText("");
-
         replyImage.setImageDrawable(getDrawable(android.R.drawable.ic_menu_camera));
     }
 
@@ -273,29 +270,17 @@ public class ViewPostActivity extends MvpActivity<ViewPostView, ViewPostPresente
     }
 
     @Override
+    public void showSendReplyError(String error) {
+        //TODO: show error
+    }
+
+    @Override
     public void showReplies(List<Reply> replies) {
+        mReplies.clear();
+        mReplies.addAll(replies);
+        mAdapter.notifyDataSetChanged();
+        mRecyclerView.invalidate();
 
-        // TODO: Move to OnCreate
-        //if activity is started, initialise recycler view and adapter
-        if (!mInitialised) {
-            mInitialised = true;
-            mReplies = replies;
-            mAdapter = new ReplyAdapter(mReplies, this);
-
-            mRecyclerView.setLayoutManager(new LinearLayoutManagerWithSmoothScroller(this));
-            mRecyclerView.setAdapter(mAdapter);
-            mRecyclerView.addItemDecoration(new SimpleDividerItemDecoration(this));
-
-        } else {
-            mRefreshLayout.setRefreshing(false);
-            mReplies.clear();
-            mReplies.addAll(replies);
-            mAdapter.notifyDataSetChanged();
-            mRecyclerView.invalidate();
-
-        }
-
-        // TODO: Add empty state here
         if (replies.size() == 0) {
             mRecyclerView.smoothScrollToPosition(mReplies.size());
             noRepliesPlaceholder.setVisibility(View.VISIBLE);
@@ -313,8 +298,7 @@ public class ViewPostActivity extends MvpActivity<ViewPostView, ViewPostPresente
 
     @Override
     public void takeReplyPicture() {
-        // TODO: Create intent
-        Intent takePhoto = new Intent(this, CameraActivity.class);
+        Intent takePhoto = CameraActivity.createIntent(this);
         startActivityForResult(takePhoto, REQUEST_CAMERA_PHOTO);
     }
 
@@ -323,9 +307,7 @@ public class ViewPostActivity extends MvpActivity<ViewPostView, ViewPostPresente
         super.onActivityResult(requestCode, resultCode, data);
 
         if (requestCode == REQUEST_CAMERA_PHOTO && resultCode == RESULT_OK) {
-            // TODO: PutExtra Constants
-            mImageReplyFilePath = data.getStringExtra("imageFilePath");
-
+            mImageReplyFilePath = data.getStringExtra(CameraActivity.CAMERA_IMG_FILE_PATH);
             setReplyThumbnail();
         } else if (requestCode == REQUEST_CAMERA_PHOTO && resultCode == RESULT_CANCELED) {
             Toast.makeText(this, getString(R.string.photo_error), Toast.LENGTH_SHORT).show();
@@ -334,71 +316,9 @@ public class ViewPostActivity extends MvpActivity<ViewPostView, ViewPostPresente
 
     private void setReplyThumbnail() {
         Bitmap bitmap = BitmapFactory.decodeFile(mImageReplyFilePath);
-        replyImage.setImageBitmap(Bitmap.createScaledBitmap(bitmap, 50, 50, false));
+        replyImage.setImageBitmap(Bitmap.createScaledBitmap(bitmap, REPLY_IMG_WIDTH, REPLY_IMG_HEIGHT, false));
     }
 
     //Recycler View classes
-    private class SimpleDividerItemDecoration extends RecyclerView.ItemDecoration {
-        private Drawable mDivider;
 
-        public SimpleDividerItemDecoration(Context context) {
-            mDivider = getDrawable(R.drawable.recycler_view_divider);
-        }
-
-        @Override
-        public void onDrawOver(Canvas c, RecyclerView parent, RecyclerView.State state) {
-            int left = parent.getPaddingLeft();
-            int right = parent.getWidth() - parent.getPaddingRight();
-
-            int childCount = parent.getChildCount();
-            for (int i = 0; i < childCount; i++) {
-                View child = parent.getChildAt(i);
-
-                RecyclerView.LayoutParams params = (RecyclerView.LayoutParams) child.getLayoutParams();
-
-                int top = child.getBottom() + params.bottomMargin;
-                int bottom = top + mDivider.getIntrinsicHeight();
-
-                mDivider.setBounds(left, top, right, bottom);
-                mDivider.draw(c);
-            }
-        }
-    }
-
-    private class LinearLayoutManagerWithSmoothScroller extends LinearLayoutManager {
-
-        public LinearLayoutManagerWithSmoothScroller(Context context) {
-            super(context, VERTICAL, false);
-        }
-
-        public LinearLayoutManagerWithSmoothScroller(Context context, int orientation, boolean reverseLayout) {
-            super(context, orientation, reverseLayout);
-        }
-
-        @Override
-        public void smoothScrollToPosition(RecyclerView recyclerView, RecyclerView.State state,
-                                           int position) {
-            RecyclerView.SmoothScroller smoothScroller = new TopSnappedSmoothScroller(recyclerView.getContext());
-            smoothScroller.setTargetPosition(position);
-            startSmoothScroll(smoothScroller);
-        }
-
-        private class TopSnappedSmoothScroller extends LinearSmoothScroller {
-            public TopSnappedSmoothScroller(Context context) {
-                super(context);
-
-            }
-
-            @Override
-            public PointF computeScrollVectorForPosition(int targetPosition) {
-                return LinearLayoutManagerWithSmoothScroller.this
-                        .computeScrollVectorForPosition(targetPosition);
-            }
-
-            @Override
-            protected int getVerticalSnapPreference() {
-                return SNAP_TO_START;
-            }
-        }
-    }
 }

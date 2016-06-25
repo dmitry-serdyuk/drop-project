@@ -15,7 +15,7 @@ public interface WorldMapPresenter extends MvpPresenter<WorldMapView> {
 
     void onCreatePostClick();
 
-    void onMapClicked(List<Post> posts, double latitude, double longitude);
+    void onMapClicked(double latitude, double longitude);
 
     void onStart();
 

@@ -1,5 +1,6 @@
 package com.dmitry.drop.project.presenter;
 
+import com.dmitry.drop.project.model.Post;
 import com.dmitry.drop.project.model.PostModel;
 import com.dmitry.drop.project.view.CreatePostView;
 import com.hannesdorfmann.mosby.mvp.MvpBasePresenter;
@@ -21,10 +22,12 @@ public class CreatePostPresenterImpl extends MvpBasePresenter<CreatePostView> im
     public void onDropButtonClick(String annotationText, String cameraImageFilePath,
                                   String thumbnailImageFilePath, double latitude,
                                   double longitude, String date) {
-        long postId = postModel.savePost(annotationText, cameraImageFilePath, thumbnailImageFilePath, latitude, longitude, date);
+
+
+        Post post = postModel.savePost(annotationText, cameraImageFilePath, thumbnailImageFilePath, latitude, longitude, date);
 
         if (isViewAttached()) {
-            getView().returnToWorldMap(postId);
+            getView().returnToWorldMap(post);
         }
     }
 }

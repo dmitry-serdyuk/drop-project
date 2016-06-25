@@ -1,5 +1,6 @@
 package com.dmitry.drop.project.view;
 
+import com.dmitry.drop.project.model.Post;
 import com.hannesdorfmann.mosby.mvp.MvpView;
 
 /**
@@ -7,9 +8,11 @@ import com.hannesdorfmann.mosby.mvp.MvpView;
  */
 public interface CreatePostView extends MvpView {
 
-    String POST_ID_EXTRA = "IdExtra";
+    String POST_EXTRA = "post";
+    String LATITUDE_EXTRA = "latitude";
+    String LONGITUDE_EXTRA = "longitude";
 
     void onDropButtonClick();
 
-    void returnToWorldMap(long postId);
+    void returnToWorldMap(Post post);
 }

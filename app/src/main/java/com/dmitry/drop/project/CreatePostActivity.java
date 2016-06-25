@@ -9,6 +9,7 @@ import android.support.annotation.NonNull;
 import android.widget.EditText;
 import android.widget.ImageView;
 
+import com.dmitry.drop.project.model.Post;
 import com.dmitry.drop.project.model.PostModelImpl;
 import com.dmitry.drop.project.presenter.CreatePostPresenter;
 import com.dmitry.drop.project.presenter.CreatePostPresenterImpl;
@@ -44,9 +45,8 @@ public class CreatePostActivity extends MvpActivity<CreatePostView, CreatePostPr
 
     public static Intent createIntent(Context context, double latitude, double longitude) {
         Intent intent = new Intent(context, CreatePostActivity.class);
-        // TODO: Constants for extra <---- IMPORTANT
-        intent.putExtra("latitude", latitude);
-        intent.putExtra("longitude", longitude);
+        intent.putExtra(LATITUDE_EXTRA, latitude);
+        intent.putExtra(LONGITUDE_EXTRA, longitude);
         return intent;
     }
 
@@ -62,14 +62,11 @@ public class CreatePostActivity extends MvpActivity<CreatePostView, CreatePostPr
         setContentView(R.layout.activity_create_post);
         ButterKnife.bind(this);
 
-        // TODO: Constants for extra <---- IMPORTANT
-        mLatitude = getIntent().getDoubleExtra("latitude", 0);
-        mLongitude = getIntent().getDoubleExtra("longitude", 0);
+        mLatitude = getIntent().getDoubleExtra(LATITUDE_EXTRA, 0);
+        mLongitude = getIntent().getDoubleExtra(LONGITUDE_EXTRA, 0);
 
-        // TODO: CreateIntent for CameraActivity
-        Intent takePhoto = new Intent(this, CameraActivity.class);
+        Intent takePhoto = CameraActivity.createIntent(this);
         startActivityForResult(takePhoto, REQUEST_CAMERA_PHOTO);
-
     }
 
     @Override
@@ -95,12 +92,11 @@ public class CreatePostActivity extends MvpActivity<CreatePostView, CreatePostPr
     }
 
     @Override
-    public void returnToWorldMap(long postId) {
-        // TODO: Tie constants to CreatePostView
+    public void returnToWorldMap(Post post) {
         Intent worldMapIntent = new Intent();
-        worldMapIntent.putExtra(Constants.LATITUDE, mLatitude);
-        worldMapIntent.putExtra(Constants.LONGITUDE, mLongitude);
-        worldMapIntent.putExtra(POST_ID_EXTRA, postId);
+        worldMapIntent.putExtra(LATITUDE_EXTRA, mLatitude);
+        worldMapIntent.putExtra(LONGITUDE_EXTRA, mLongitude);
+        worldMapIntent.putExtra(POST_EXTRA, post);
         setResult(RESULT_OK, worldMapIntent);
         finish();
     }

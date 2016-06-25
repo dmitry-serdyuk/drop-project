@@ -10,7 +10,11 @@ import java.util.List;
  */
 public interface ViewPostView extends MvpView {
 
-    // TODO: Make sure all views only have methods beginning with show/hide
+    String POST_EXTRA = "post";
+
+    int REPLY_IMG_WIDTH = 50;
+    int REPLY_IMG_HEIGHT = 50;
+
     void onSendReplyClick();
 
     void showReplies(List<Reply> replies);
@@ -22,4 +26,6 @@ public interface ViewPostView extends MvpView {
     void clearReplyBox();
 
     void showRepliesLoading(boolean loading);
+
+    void showSendReplyError(String error);
 }

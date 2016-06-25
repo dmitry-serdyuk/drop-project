@@ -1,6 +1,7 @@
 package com.dmitry.drop.project;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -42,6 +43,11 @@ public class CameraActivity extends Activity {
     private String mThumbnailImgFilePath;
     private Bitmap mCameraImgBitmap;
     private Bitmap mThumbnailBitmap;
+
+    public static Intent createIntent(Context context) {
+        Intent intent = new Intent(context, CameraActivity.class);
+        return intent;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -123,13 +129,10 @@ public class CameraActivity extends Activity {
             //create a thumbnail from the camera image, compress, crop and write to file
             mThumbnailBitmap = mCameraImgBitmap;
             compressBitmap(mThumbnailBitmap);
-            // TODO: Separate function into two
-            cropImageToCircle();
-            featherImage;
-            circleCropAndFeather();
+            circleCropImage();
             writeFile(mThumbnailImgFilePath, mThumbnailBitmap);
 
-            returnToMap();
+            returnImage();
 
         } else if (requestCode == REQUEST_TAKE_PHOTO && resultCode == RESULT_CANCELED) {
             setResult(RESULT_CANCELED);
@@ -137,8 +140,7 @@ public class CameraActivity extends Activity {
         }
     }
 
-    // TODO: Change function name as it doesn't match all contexts
-    private void returnToMap() {
+    private void returnImage() {
         Intent returnFilePaths = new Intent();
         returnFilePaths.putExtra(CAMERA_IMG_FILE_PATH, mCameraImgFilePath);
         returnFilePaths.putExtra(THUMBNAIL_IMG_FILE_PATH, mThumbnailImgFilePath);
@@ -146,7 +148,7 @@ public class CameraActivity extends Activity {
         finish();
     }
 
-    private void circleCropAndFeather() {
+    private void circleCropImage() {
         int width = mThumbnailBitmap.getWidth();
         int height = mThumbnailBitmap.getHeight();
 
@@ -180,7 +182,6 @@ public class CameraActivity extends Activity {
 
         Bitmap bmp = bitmap;
         options.inJustDecodeBounds = true;
-
         int actualHeight = bitmap.getHeight();
         int actualWidth = bitmap.getWidth();
 

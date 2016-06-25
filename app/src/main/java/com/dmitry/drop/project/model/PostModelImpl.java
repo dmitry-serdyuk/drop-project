@@ -11,29 +11,29 @@ import java.util.List;
 public class PostModelImpl implements PostModel {
 
     @Override
-    public long savePost(String annotationText, String cameraImgFilePath,
+    public Post savePost(String annotationText, String cameraImgFilePath,
                          String thumbnailImgFilePath, double latitude, double longitude, String date) {
         Post post = new Post(annotationText, cameraImgFilePath,
                 thumbnailImgFilePath, latitude, longitude, date);
         post.save();
-        return post.getId();
+
+        //return the saved post to be added to world map
+        return post;
     }
 
     @Override
-    public void getReplies(final long postId, final GetRepliesCallback callback) {
+    public void getReplies(final Post post, final GetRepliesCallback callback) {
+        final List<Reply> replies = post.replies();
         new RepliesAsyncLoader(
                 new RepliesAsyncLoader.RepliesLoaderListener() {
-
                     @Override
                     public void onSuccess() {
-                        List<Reply> replies;
-                        if (postId != -1) {
-                            Post post = new Select().from(Post.class).where("id = ?", postId).executeSingle();
+                        //List<Reply> replies = post.replies();
+                        /*if (post != null) {
                             replies = post.replies();
                         } else {
                             replies = Collections.emptyList();
-                        }
-
+                        } */
                         callback.onSuccess(replies);
                     }
 
@@ -56,8 +56,23 @@ public class PostModelImpl implements PostModel {
 
 
     @Override
-    public List<Post> getAllPosts() {
-        return Post.getAll();
+    public void getAllPosts(GetAllPostsCallback callback) {
+        List<Post> posts = Post.getAll();
+        if (posts != null)
+            callback.onSuccess(posts);
+        else
+            callback.onError("Could not get posts.");
+    }
+
+    @Override
+    public void saveReply(Post post, String author, String annotation, String date, String imageFilePath, SaveReplyCallback callback) {
+        Reply reply = new Reply(post, author, annotation, date, imageFilePath);
+        reply.save();
+        reply = new Select().from(Reply.class).where("id = ?", reply.getId()).executeSingle();
+        if(reply != null)
+            callback.onSuccess();
+        else
+            callback.onError("Could not save reply.");
     }
 
     //Debug

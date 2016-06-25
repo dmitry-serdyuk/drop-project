@@ -14,16 +14,6 @@ import com.activeandroid.annotation.Table;
 @Table(name = "Replies")
 public class Reply extends Model implements Parcelable {
 
-    public static final Parcelable.Creator<Reply> CREATOR
-            = new Parcelable.Creator<Reply>() {
-        public Reply createFromParcel(Parcel in) {
-            return new Reply(in);
-        }
-
-        public Reply[] newArray(int size) {
-            return new Reply[size];
-        }
-    };
     @Column(name = "Post")
     public Post post;
     @Column(name = "ImageFilePath")
@@ -55,6 +45,17 @@ public class Reply extends Model implements Parcelable {
         author = in.readString();
         dateCreated = in.readString();
     }
+
+    public static final Parcelable.Creator<Reply> CREATOR
+            = new Parcelable.Creator<Reply>() {
+        public Reply createFromParcel(Parcel in) {
+            return new Reply(in);
+        }
+
+        public Reply[] newArray(int size) {
+            return new Reply[size];
+        }
+    };
 
     public String getAuthor() {
         return author;

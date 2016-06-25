@@ -1,6 +1,8 @@
 package com.dmitry.drop.project.model;
 
 import android.location.Location;
+import android.os.Parcel;
+import android.os.Parcelable;
 
 import com.activeandroid.Model;
 import com.activeandroid.annotation.Column;
@@ -15,9 +17,9 @@ import java.util.List;
  */
 
 @Table(name = "Posts")
-public class Post extends Model {
+public class Post extends Model implements Parcelable {
 
-    final double INIT_RADIUS = 100;
+    final float INIT_RADIUS = 100;
     @Column(name = "ImageFilePath")
     String imageFilePath;
     @Column(name = "ThumbnailFilePath")
@@ -29,9 +31,7 @@ public class Post extends Model {
     @Column(name = "Longitude")
     double longitude;
     @Column(name = "Radius")
-    double radius;
-    //TODO: Dynamic Radius for posts
-
+    float radius;
     @Column(name = "Date")
     String dateCreated;
 
@@ -49,6 +49,27 @@ public class Post extends Model {
         this.longitude = longitude;
         this.dateCreated = dateCreated;
         radius = INIT_RADIUS;
+    }
+
+    public static final Parcelable.Creator<Post> CREATOR
+            = new Parcelable.Creator<Post>() {
+        public Post createFromParcel(Parcel in) {
+            return new Post(in);
+        }
+
+        public Post[] newArray(int size) {
+            return new Post[size];
+        }
+    };
+
+    private Post(Parcel in) {
+        imageFilePath = in.readString();
+        thumbnailFilePath = in.readString();
+        annotation = in.readString();
+        latitude = in.readDouble();
+        longitude = in.readDouble();
+        radius = in.readFloat();
+        dateCreated = in.readString();
     }
 
     public static List<Post> getAll() {
@@ -91,7 +112,7 @@ public class Post extends Model {
         return radius;
     }
 
-    public void setRadius(double radius) {
+    public void setRadius(float radius) {
         this.radius = radius;
     }
 
@@ -119,5 +140,21 @@ public class Post extends Model {
         float[] distance = new float[1];
         Location.distanceBetween(latitude, longitude, this.latitude, this.longitude, distance);
         return distance[0] < radius;
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel parcel, int i) {
+        parcel.writeString(imageFilePath);
+        parcel.writeString(thumbnailFilePath);
+        parcel.writeString(annotation);
+        parcel.writeDouble(latitude);
+        parcel.writeDouble(longitude);
+        parcel.writeFloat(radius);
+        parcel.writeString(dateCreated);
     }
 }

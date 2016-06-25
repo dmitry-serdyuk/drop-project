@@ -4,7 +4,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <com.google.android.gms.maps.MapView xmlns:android="http://schemas.android.com/apk/res/android"
+
+    <com.google.android.gms.maps.MapView
         android:id="@+id/map"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
@@ -13,21 +14,47 @@
         android:id="@+id/worldMap_debugDeleteButton"
         android:layout_width="50dp"
         android:layout_height="50dp"
-        android:text="D"
-        android:layout_marginTop="50dp"
         android:layout_marginLeft="3dp"
+        android:layout_marginTop="50dp"
         android:background="@color/transparent_white"
-        android:onClick="onDeleteClick"/>
+        android:onClick="onDeleteClick"
+        android:text="D" />
 
 
     <ImageView
         android:id="@+id/worldMap_addPostButton"
         android:layout_width="75dp"
         android:layout_height="75dp"
-        android:layout_centerHorizontal="true"
         android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
         android:layout_margin="10dp"
         android:src="@drawable/add" />
+
+
+    <FrameLayout
+        android:id="@+id/woldMap_postReveal"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="invisible" />
+
+    <LinearLayout
+        android:visibility="invisible"
+        android:id="@+id/worldMap_postSelectorLayout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:layout_marginStart="10dp"
+        android:layout_marginEnd="10dp">
+
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/worldMap_postSelector"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+        </android.support.v7.widget.RecyclerView>
+
+    </LinearLayout>
+
 
 </RelativeLayout>
 

@@ -10,6 +10,7 @@
     android:paddingStart="10dp"
     tools:context="com.dmitry.drop.project.ViewPostActivity">
 
+
     <RelativeLayout
         android:id="@+id/viewPost_postLayout"
         android:layout_width="match_parent"
@@ -61,6 +62,7 @@
                 android:id="@+id/viewPost_postImg"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
+                android:transitionName="@string/post_transition_name"
                 android:scaleType="centerCrop" />
 
             <RelativeLayout

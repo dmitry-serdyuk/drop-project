@@ -11,6 +11,7 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
 import com.dmitry.drop.project.R;
 import com.dmitry.drop.project.model.Reply;
 
@@ -42,7 +43,7 @@ public class ReplyAdapter extends RecyclerView.Adapter<ReplyAdapter.ViewHolder> 
                                                       int viewType) {
         // create a new view
         View v = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.reply_layout, parent, false);
+                .inflate(R.layout.post_item_layout, parent, false);
 
         ViewHolder vh = new ViewHolder(v);
         return vh;
@@ -55,31 +56,34 @@ public class ReplyAdapter extends RecyclerView.Adapter<ReplyAdapter.ViewHolder> 
         // - replace the contents of the view with that element
 
         String imageFilePath = replies.get(position).getImageFilePath();
-        String elapsedTime = getElapsedTime(replies.get(position).getDateCreated());
+        String elapsedTime = getReplyTimeSpan(replies.get(position).getDateCreated());
 
-        holder.mAuthorTextView.setText(replies.get(position).getAuthor());
-        holder.mCommentTextView.setText(replies.get(position).getComment());
-        holder.mDateTextView.setText(elapsedTime);
+        holder.authorTextView.setText(replies.get(position).getAuthor());
+        holder.commentTextView.setText(replies.get(position).getComment());
+        holder.dateTextView.setText(elapsedTime);
 
         if (imageFilePath != null) {
-            Bitmap replyImage = BitmapFactory.decodeFile(imageFilePath);
-            holder.mReplyImage.setImageBitmap(replyImage);
+            Glide.with(context).load(imageFilePath).centerCrop().into(holder.replyImage);
         }
     }
 
-    private String getElapsedTime(String dateCreated) {
-        SimpleDateFormat f = new SimpleDateFormat("dd/MM/yyy HH:mm", Locale.US);
-        Date d = null;
+    private String getReplyTimeSpan(String dateCreated) {
+        SimpleDateFormat format = new SimpleDateFormat("dd/MM/yyy HH:mm", Locale.US);
+        Date parsedDate;
+        String timeSpan = null;
+
         try {
-            d = f.parse(dateCreated);
+            parsedDate = format.parse(dateCreated);
+            long dateCreatedMilliseconds = parsedDate.getTime();
+
+            timeSpan = DateUtils.getRelativeTimeSpanString(dateCreatedMilliseconds, new Date().getTime(), DateUtils.MINUTE_IN_MILLIS).toString();
+            //if less than a minute show "just now"
+            if (timeSpan.equals(context.getString(R.string.zero_minutes_ago_text)))
+                return context.getString(R.string.just_now_text);
         } catch (ParseException e) {
             e.printStackTrace();
         }
-        long dateCreatedMilliseconds = 0;
-        if (d != null) {
-            dateCreatedMilliseconds = d.getTime();
-        }
-        return DateUtils.getRelativeTimeSpanString(dateCreatedMilliseconds, new Date().getTime(), DateUtils.MINUTE_IN_MILLIS).toString();
+        return timeSpan;
     }
 
     // Return the size of your dataset (invoked by the layout manager)
@@ -94,16 +98,16 @@ public class ReplyAdapter extends RecyclerView.Adapter<ReplyAdapter.ViewHolder> 
     public static class ViewHolder extends RecyclerView.ViewHolder {
         // each data item is just a string in this case
 
-        public TextView mAuthorTextView, mCommentTextView, mDateTextView;
-        public ImageView mReplyImage;
+        public TextView authorTextView, commentTextView, dateTextView;
+        public ImageView replyImage;
 
         public ViewHolder(View v) {
             super(v);
-            mAuthorTextView = ButterKnife.findById(v, R.id.replyLayout_author);
-            mAuthorTextView = ButterKnife.findById(v, R.id.replyLayout_author);
-            mCommentTextView = ButterKnife.findById(v, R.id.replyLayout_comment);
-            mDateTextView = ButterKnife.findById(v, R.id.replyLayout_dateTimeCreated);
-            mReplyImage = ButterKnife.findById(v, R.id.replyLayout_replyImage);
+            authorTextView = ButterKnife.findById(v, R.id.replyLayout_author);
+            authorTextView = ButterKnife.findById(v, R.id.replyLayout_author);
+            commentTextView = ButterKnife.findById(v, R.id.replyLayout_comment);
+            dateTextView = ButterKnife.findById(v, R.id.replyLayout_dateTimeCreated);
+            replyImage = ButterKnife.findById(v, R.id.replyLayout_replyImage);
         }
     }
 }
