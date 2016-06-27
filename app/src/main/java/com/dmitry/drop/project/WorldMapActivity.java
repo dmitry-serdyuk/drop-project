@@ -62,12 +62,11 @@ import static com.dmitry.drop.project.utility.AnimUtils.getFastOutSlowInInterpol
 
 /**
  * Created by Dmitry on 15/06/2016.
- *
+ * <p/>
  * Main activity and home screen for the application
- *
+ * <p/>
  * Loads Google Maps and Google Play Services api's
  * Loads and draws all posts onto the google map
- *
  */
 
 public class WorldMapActivity extends MvpActivity<WorldMapView, WorldMapPresenter>
@@ -106,8 +105,6 @@ public class WorldMapActivity extends MvpActivity<WorldMapView, WorldMapPresente
     MapView mMapView;
     @BindView(R.id.worldMap_layout)
     RelativeLayout worldMapLayout;
-    @BindView(R.id.worldMap_debugDeleteButton)
-    Button debugDeleteButton;
     @BindView(R.id.woldMap_postReveal)
     FrameLayout postReveal;
     @BindView(R.id.worldMap_postSelector)
@@ -125,13 +122,10 @@ public class WorldMapActivity extends MvpActivity<WorldMapView, WorldMapPresente
     private LocationRequest mLocationRequest;
     //boolean flag if user changes camera
     private boolean mCameraTracking = true;
-    private boolean debugDelete = false;
 
     //Database
     private List<Post> posts = Collections.emptyList();
     private PostModelImpl postModel;
-
-    LatLng debugPos;
 
     // Constructors
     //================================================================================
@@ -261,23 +255,17 @@ public class WorldMapActivity extends MvpActivity<WorldMapView, WorldMapPresente
 
     @Override
     public void viewPost(final Post post) {
-        if (debugDelete) {
-            postModel.delete(post.getId());
-            mMap.clear();
-            mMapView.invalidate();
-            presenter.onStart();
-        } else {
-            showPostClickAnim(post.getLatitude(), post.getLongitude(), new ValueAnimator.AnimatorUpdateListener() {
-                @Override
-                public void onAnimationUpdate(ValueAnimator animation) {
-                    if (animation.getCurrentPlayTime() > AnimUtils.VIEW_POST / 2) {
-                        animation.removeAllUpdateListeners();
-                        Intent viewPost = ViewPostActivity.createIntent(WorldMapActivity.this, post.getId(), canReply(post));
-                        startActivityForResult(viewPost, VIEW_POST_REQUEST);
-                    }
+        showPostClickAnim(post.getLatitude(), post.getLongitude(), new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator animation) {
+                if (animation.getCurrentPlayTime() > AnimUtils.VIEW_POST / 2) {
+                    animation.removeAllUpdateListeners();
+                    Intent viewPost = ViewPostActivity.createIntent(WorldMapActivity.this, post.getId(), canReply(post));
+                    startActivityForResult(viewPost, VIEW_POST_REQUEST);
                 }
-            });
-        }
+            }
+        });
+
     }
 
     @Override
@@ -566,7 +554,6 @@ public class WorldMapActivity extends MvpActivity<WorldMapView, WorldMapPresente
 
     @Override
     public void onMapClick(LatLng position) {
-        debugPos = position;
         presenter.onMapClicked(position.latitude, position.longitude);
     }
 
@@ -581,16 +568,6 @@ public class WorldMapActivity extends MvpActivity<WorldMapView, WorldMapPresente
     public boolean onMyLocationButtonClick() {
         mCameraTracking = true;
         return false;
-    }
-
-    public void onDeleteClick(View view) {
-        if (!debugDelete) {
-            debugDelete = true;
-            debugDeleteButton.setBackgroundColor(ContextCompat.getColor(this, R.color.grey));
-        } else {
-            debugDeleteButton.setBackgroundColor(ContextCompat.getColor(this, R.color.white));
-            debugDelete = false;
-        }
     }
 
     @Override

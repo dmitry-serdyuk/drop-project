@@ -27,9 +27,6 @@ public interface PostModel {
 
     void like(Post post, boolean liked);
 
-    //debug Method
-    void delete(long postId);
-
     // Callbacks
     //================================================================================
     interface GetRepliesCallback {

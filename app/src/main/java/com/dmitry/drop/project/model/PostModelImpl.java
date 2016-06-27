@@ -88,15 +88,4 @@ public class PostModelImpl implements PostModel {
         post.like(liked);
         post.save();
     }
-
-    //Debug
-    @Override
-    public void delete(long postId) {
-        Post post = new Select().from(Post.class).where("id = ?", postId).executeSingle();
-        List<Reply> replies = post.replies();
-        for (Reply reply : replies) {
-            reply.delete();
-        }
-        post.delete();
-    }
 }
