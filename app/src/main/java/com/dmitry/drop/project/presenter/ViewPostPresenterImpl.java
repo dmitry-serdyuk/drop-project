@@ -37,7 +37,7 @@ public class ViewPostPresenterImpl extends MvpBasePresenter<ViewPostView> implem
             @Override
             public void onError(String error) {
                 if (isViewAttached()) {
-                    getView().showReplyLoadingError();
+                    getView().showReplyLoadingError(error);
                 }
             }
         });
@@ -70,6 +70,48 @@ public class ViewPostPresenterImpl extends MvpBasePresenter<ViewPostView> implem
     public void onSelectImageClick() {
         if (isViewAttached())
             getView().takeReplyPicture();
+    }
+
+    @Override
+    public void onStart(long postId) {
+        postModel.getPost(postId, new PostModel.GetPostCallback() {
+            @Override
+            public void onSuccess(Post post) {
+                if (isViewAttached()) {
+                    getView().showPost(post);
+                    getReplies(post);
+                }
+            }
+
+            @Override
+            public void onError(String error) {
+                if (isViewAttached())
+                    getView().showPostLoadingError(error);
+            }
+        });
+    }
+
+    @Override
+    public void onLikeClick() {
+        if (isViewAttached())
+            getView().showLikeAnim();
+    }
+
+    @Override
+    public void onMainImgClick(String postImgFilePath) {
+        if (isViewAttached())
+            getView().showFullscreenImg(postImgFilePath);
+    }
+
+    @Override
+    public void onBackClick() {
+        if (isViewAttached())
+            getView().hideFullscreenImg();
+    }
+
+    @Override
+    public void onDestroy(Post post, boolean liked) {
+        postModel.like(post, liked);
     }
 
 }

@@ -1,20 +1,22 @@
 package com.dmitry.drop.project;
 
+import android.animation.Animator;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Canvas;
-import android.graphics.PointF;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.v7.widget.LinearLayoutManager;
+
 import com.dmitry.drop.project.utility.RecyclerViewUtils.*;
+
 import android.support.v7.widget.LinearSmoothScroller;
 import android.support.v7.widget.RecyclerView;
 import android.text.format.DateUtils;
 import android.transition.Slide;
+import android.util.Log;
+import android.view.Gravity;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewTreeObserver;
 import android.view.animation.Interpolator;
@@ -41,6 +43,7 @@ import com.hannesdorfmann.mosby.mvp.MvpActivity;
 import com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayout;
 import com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayoutDirection;
 
+import java.io.IOException;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -52,6 +55,8 @@ import java.util.Locale;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import pl.droidsonroids.gif.GifDrawable;
+import pl.droidsonroids.gif.GifImageView;
 
 import static com.dmitry.drop.project.utility.AnimUtils.getFastOutSlowInInterpolator;
 
@@ -88,24 +93,31 @@ public class ViewPostActivity extends MvpActivity<ViewPostView, ViewPostPresente
     RelativeLayout viewPostHeading;
     @BindView(R.id.viewPost_postImgFrame)
     RelativeLayout viewPostImgFrame;
+    @BindView(R.id.viewPost_likeGif)
+    GifImageView viewPostLike;
     @BindView(R.id.viewPost_repliesPlaceholder)
     RelativeLayout repliesPlaceholder;
     @BindView(R.id.viewPost_barLayout)
     LinearLayout barLayout;
+    @BindView(R.id.viewPost_viewFullImage)
+    ImageView viewFullImage;
     @BindView(R.id.viewPost_repliesLoading)
     ProgressBar repliesLoading;
     @BindView(R.id.viePost_noRepliesPlaceholder)
     TextView noRepliesPlaceholder;
 
-    private RecyclerView.Adapter mAdapter;
+    private ReplyAdapter mAdapter;
     private Post mPost;
-    private String mImagePostFilePath;
     private String mImageReplyFilePath;
     private List<Reply> mReplies = new ArrayList<>();
+    private GifDrawable mLikeGif;
+    private boolean mLiked = false;
+    private boolean canReply;
 
-    public static Intent createIntent(Context context, Post post) {
+    public static Intent createIntent(Context context, long postId, boolean canReply) {
         Intent intent = new Intent(context, ViewPostActivity.class);
-        intent.putExtra(POST_EXTRA, post);
+        intent.putExtra(POST_ID_EXTRA, postId);
+        intent.putExtra(CAN_REPLY_EXTRA, canReply);
         return intent;
     }
 
@@ -121,25 +133,25 @@ public class ViewPostActivity extends MvpActivity<ViewPostView, ViewPostPresente
         setContentView(R.layout.activity_view_post);
         ButterKnife.bind(this);
 
-        Intent viewPost = getIntent();
-        mPost = viewPost.getParcelableExtra(POST_EXTRA);
-
+        canReply = getIntent().getBooleanExtra(CAN_REPLY_EXTRA, false);
         setupView();
-        showPost();
+        presenter.onStart(getIntent().getLongExtra(POST_ID_EXTRA, -1));
 
-        //load post replies from model
-        presenter.getReplies(mPost);
-        mAdapter = new ReplyAdapter(mReplies, this);
-        mRecyclerView.setAdapter(mAdapter);
     }
 
     private void setupView() {
         replyImage.setAdjustViewBounds(true);
-        mImagePostFilePath = mPost.getImageFilePath();
         barLayout.setAlpha(0f);
 
-        mRecyclerView.setLayoutManager(new LinearLayoutManagerWithSmoothScroller(this));
+        viewPostLike.setAlpha(0.8f);
 
+
+        if(!canReply) {
+            barLayout.setVisibility(View.GONE);
+            noRepliesPlaceholder.invalidate();
+        }
+
+        mRecyclerView.setLayoutManager(new LinearLayoutManagerWithSmoothScroller(this));
         mRecyclerView.addItemDecoration(new SimpleDividerItemDecoration(this));
 
         mRefreshLayout.setOnRefreshListener(new SwipyRefreshLayout.OnRefreshListener() {
@@ -148,6 +160,15 @@ public class ViewPostActivity extends MvpActivity<ViewPostView, ViewPostPresente
                 presenter.getReplies(mPost);
             }
         });
+
+        mAdapter = new ReplyAdapter(mReplies, this);
+        mAdapter.SetOnItemClickListener(new ReplyAdapter.OnItemClickListener() {
+            @Override
+            public void onItemClick(View view, int position) {
+                showFullscreenImg(mReplies.get(position).getImageFilePath());
+            }
+        });
+        mRecyclerView.setAdapter(mAdapter);
 
         viewPostLayout.getViewTreeObserver().addOnPreDrawListener(new ViewTreeObserver
                 .OnPreDrawListener() {
@@ -160,8 +181,10 @@ public class ViewPostActivity extends MvpActivity<ViewPostView, ViewPostPresente
         });
     }
 
-    private void showPost() {
-        Glide.with(this).load(mImagePostFilePath).into(postImg);
+    @Override
+    public void showPost(Post post) {
+        mPost = post;
+        Glide.with(this).load(post.getImageFilePath()).into(postImg);
         Glide.with(this).load("").placeholder(getDrawable(R.drawable.post_img_overlay)).into(postImageOverlay);
 
         postAnnotation.setText(mPost.getAnnotation());
@@ -249,8 +272,13 @@ public class ViewPostActivity extends MvpActivity<ViewPostView, ViewPostPresente
     }
 
     @Override
-    public void showReplyLoadingError() {
-        Toast.makeText(this, getString(R.string.reply_loading_error), Toast.LENGTH_SHORT).show();
+    public void showReplyLoadingError(String error) {
+        Toast.makeText(this, error, Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void showPostLoadingError(String error) {
+
     }
 
     @Override
@@ -272,6 +300,52 @@ public class ViewPostActivity extends MvpActivity<ViewPostView, ViewPostPresente
     @Override
     public void showSendReplyError(String error) {
         //TODO: show error
+    }
+
+    @Override
+    public void showLikeAnim() {
+        try {
+            if (!mLiked) {
+                mLiked = true;
+                mLikeGif = new GifDrawable(getResources(), R.drawable.like_anim);
+            } else {
+                mLiked = false;
+                mLikeGif = new GifDrawable(getResources(), R.drawable.unlike_anim);
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        viewPostLike.setImageDrawable(mLikeGif);
+        mLikeGif.start();
+    }
+
+    @Override
+    public void showFullscreenImg(String imageFilePath) {
+        viewFullImage.setVisibility(View.VISIBLE);
+        Glide.with(this).load(imageFilePath).dontAnimate().into(viewFullImage);
+
+        viewFullImage.setAlpha(0.2f);
+        viewFullImage.animate()
+                .alpha(1f)
+                .setDuration(800)
+                .withEndAction(new Runnable() {
+                    @Override
+                    public void run() {
+                        viewPostLayout.setVisibility(View.GONE);
+                    }
+                })
+                .start();
+    }
+
+    @Override
+    public void hideFullscreenImg() {
+        viewPostLayout.setVisibility(View.VISIBLE);
+        viewFullImage.animate()
+                .alpha(0f)
+                .setDuration(800)
+                .start();
     }
 
     @Override
@@ -319,6 +393,28 @@ public class ViewPostActivity extends MvpActivity<ViewPostView, ViewPostPresente
         replyImage.setImageBitmap(Bitmap.createScaledBitmap(bitmap, REPLY_IMG_WIDTH, REPLY_IMG_HEIGHT, false));
     }
 
-    //Recycler View classes
+    @OnClick(R.id.viewPost_likeGif)
+    public void onLikeClick() {
+        presenter.onLikeClick();
+    }
 
+    @OnClick(R.id.viewPost_postImg)
+    public void onMainImgClick() {
+        presenter.onMainImgClick(mPost.getImageFilePath());
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (viewPostLayout.getVisibility() == View.GONE) {
+            presenter.onBackClick();
+        } else {
+            super.onBackPressed();
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        presenter.onDestroy(mPost, mLiked);
+        super.onDestroy();
+    }
 }

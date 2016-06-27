@@ -23,11 +23,21 @@ public class CreatePostPresenterImpl extends MvpBasePresenter<CreatePostView> im
                                   String thumbnailImageFilePath, double latitude,
                                   double longitude, String date) {
 
+        postModel.savePost(annotationText, cameraImageFilePath,
+                thumbnailImageFilePath, latitude, longitude, date, new PostModel.SavePostCallback() {
+                    @Override
+                    public void onSuccess(Post post) {
+                        if (isViewAttached()) {
+                            getView().returnToWorldMap(post);
+                        }
+                    }
 
-        Post post = postModel.savePost(annotationText, cameraImageFilePath, thumbnailImageFilePath, latitude, longitude, date);
-
-        if (isViewAttached()) {
-            getView().returnToWorldMap(post);
-        }
+                    @Override
+                    public void onError(String error) {
+                        if (isViewAttached()) {
+                            getView().showSavePostError(error);
+                        }
+                    }
+                });
     }
 }

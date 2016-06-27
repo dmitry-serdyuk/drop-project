@@ -30,6 +30,7 @@ public class ReplyAdapter extends RecyclerView.Adapter<ReplyAdapter.ViewHolder> 
 
     List<Reply> replies;
     Context context;
+    OnItemClickListener mItemClickListener;
 
     // Provide a suitable constructor (depends on the kind of dataset)
     public ReplyAdapter(List<Reply> replies, Context context) {
@@ -43,7 +44,7 @@ public class ReplyAdapter extends RecyclerView.Adapter<ReplyAdapter.ViewHolder> 
                                                       int viewType) {
         // create a new view
         View v = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.post_item_layout, parent, false);
+                .inflate(R.layout.reply_item_layout, parent, false);
 
         ViewHolder vh = new ViewHolder(v);
         return vh;
@@ -58,7 +59,7 @@ public class ReplyAdapter extends RecyclerView.Adapter<ReplyAdapter.ViewHolder> 
         String imageFilePath = replies.get(position).getImageFilePath();
         String elapsedTime = getReplyTimeSpan(replies.get(position).getDateCreated());
 
-        holder.authorTextView.setText(replies.get(position).getAuthor());
+        holder.authorTextView.setText(context.getString(R.string.username_placeholder));
         holder.commentTextView.setText(replies.get(position).getComment());
         holder.dateTextView.setText(elapsedTime);
 
@@ -95,7 +96,7 @@ public class ReplyAdapter extends RecyclerView.Adapter<ReplyAdapter.ViewHolder> 
     // Provide a reference to the views for each data item
     // Complex data items may need more than one view per item, and
     // you provide access to all the views for a data item in a view holder
-    public static class ViewHolder extends RecyclerView.ViewHolder {
+    public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         // each data item is just a string in this case
 
         public TextView authorTextView, commentTextView, dateTextView;
@@ -104,10 +105,25 @@ public class ReplyAdapter extends RecyclerView.Adapter<ReplyAdapter.ViewHolder> 
         public ViewHolder(View v) {
             super(v);
             authorTextView = ButterKnife.findById(v, R.id.replyLayout_author);
-            authorTextView = ButterKnife.findById(v, R.id.replyLayout_author);
             commentTextView = ButterKnife.findById(v, R.id.replyLayout_comment);
             dateTextView = ButterKnife.findById(v, R.id.replyLayout_dateTimeCreated);
             replyImage = ButterKnife.findById(v, R.id.replyLayout_replyImage);
+            replyImage.setOnClickListener(this);
         }
+
+        @Override
+        public void onClick(View v) {
+            if (mItemClickListener != null) {
+                mItemClickListener.onItemClick(v, getPosition());
+            }
+        }
+    }
+
+    public interface OnItemClickListener {
+        void onItemClick(View view , int position);
+    }
+
+    public void SetOnItemClickListener(final OnItemClickListener mItemClickListener) {
+        this.mItemClickListener = mItemClickListener;
     }
 }

@@ -8,7 +8,9 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
 import com.dmitry.drop.project.model.Post;
 import com.dmitry.drop.project.model.PostModelImpl;
 import com.dmitry.drop.project.presenter.CreatePostPresenter;
@@ -76,19 +78,28 @@ public class CreatePostActivity extends MvpActivity<CreatePostView, CreatePostPr
         if (requestCode == REQUEST_CAMERA_PHOTO && resultCode == RESULT_OK) {
             mCameraImageFilePath = data.getStringExtra(CameraActivity.CAMERA_IMG_FILE_PATH);
             mThumbnailImageFilePath = data.getStringExtra(CameraActivity.THUMBNAIL_IMG_FILE_PATH);
-            Bitmap photo = BitmapFactory.decodeFile(mCameraImageFilePath);
-            cameraImg.setImageBitmap(photo);
+
+            Glide.with(this).load(mCameraImageFilePath).into(cameraImg);
         } else if (requestCode == REQUEST_CAMERA_PHOTO && resultCode == RESULT_CANCELED) {
             finish();
         }
     }
 
-    @OnClick(R.id.createPost_cameraImg)
+    @OnClick(R.id.createPost_dropButton)
     public void onDropButtonClick() {
         String annotationText = annotation.getText().toString();
         String date = DateFormat.getInstance().format(new Date());
-        presenter.onDropButtonClick(annotationText, mCameraImageFilePath, mThumbnailImageFilePath,
-                mLatitude, mLongitude, date);
+        if (annotationText.length() == 0) {
+            Toast.makeText(this, "Write something", Toast.LENGTH_SHORT).show();
+        } else {
+            presenter.onDropButtonClick(annotationText, mCameraImageFilePath, mThumbnailImageFilePath,
+                    mLatitude, mLongitude, date);
+        }
+    }
+
+    @Override
+    public void showSavePostError(String error) {
+
     }
 
     @Override

@@ -1,8 +1,13 @@
 package com.dmitry.drop.project.presenter;
 
 
+import android.animation.Animator;
+import android.animation.ValueAnimator;
+import android.view.animation.Animation;
+
 import com.dmitry.drop.project.model.Post;
 import com.dmitry.drop.project.model.PostModel;
+import com.dmitry.drop.project.utility.Constants;
 import com.dmitry.drop.project.view.WorldMapView;
 import com.hannesdorfmann.mosby.mvp.MvpBasePresenter;
 
@@ -51,15 +56,19 @@ public class WorldMapPresenterImpl extends MvpBasePresenter<WorldMapView> implem
     }
 
     private void getClickedPosts(List<Post> posts, double latitude, double longitude) {
-        List<Post> clickedPosts = new ArrayList<Post>();
+        final List<Post> clickedPosts = new ArrayList<Post>();
         for (Post post : posts) {
             if (post.isWithinRadius(latitude, longitude)) {
                 clickedPosts.add(post);
             }
         }
 
-        if (isViewAttached())
-            getView().showPostSelector(clickedPosts);
+        if (clickedPosts.size() != 0 && isViewAttached()) {
+            if (clickedPosts.size() == 1)
+                getView().viewPost(clickedPosts.get(0));
+            else
+                getView().showPostSelector(latitude, longitude, clickedPosts);
+        }
     }
 
     @Override

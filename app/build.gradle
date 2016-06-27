@@ -36,6 +36,7 @@ dependencies {
     compile 'de.hdodenhof:circleimageview:2.0.0'
     compile 'com.github.bumptech.glide:glide:3.7.0'
     compile 'jp.wasabeef:recyclerview-animators:2.2.3'
+    compile 'pl.droidsonroids.gif:android-gif-drawable:1.1.16'
     
     apt 'com.jakewharton:butterknife-compiler:8.0.1'
 }

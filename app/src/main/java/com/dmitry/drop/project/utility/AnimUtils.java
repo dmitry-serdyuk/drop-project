@@ -35,6 +35,12 @@ public class AnimUtils {
     private static Interpolator fastOutSlowIn;
     private static Interpolator fastOutLinearIn;
     private static Interpolator linearOutSlowIn;
+    public static int VIEW_POST = 1000;
+    public static final float ORIGINAL_SCALE = 1f;
+    public static final float ORIGINAL_ALPHA = 1f;
+    public static final float MAXIMUM_SCALE = 25f;
+    public static final float TRANSPARENT_ALPHA = 0f;
+    public static final int ONE_SECOND = 1000;
     private AnimUtils() {
     }
 

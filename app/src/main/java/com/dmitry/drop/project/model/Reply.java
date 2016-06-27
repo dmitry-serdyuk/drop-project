@@ -40,6 +40,7 @@ public class Reply extends Model implements Parcelable {
     }
 
     private Reply(Parcel in) {
+        post = in.readParcelable(Reply.class.getClassLoader());
         imageFilePath = in.readString();
         comment = in.readString();
         author = in.readString();
@@ -96,6 +97,7 @@ public class Reply extends Model implements Parcelable {
 
     @Override
     public void writeToParcel(Parcel parcel, int i) {
+        parcel.writeParcelable(post, i);
         parcel.writeString(imageFilePath);
         parcel.writeString(comment);
         parcel.writeString(author);

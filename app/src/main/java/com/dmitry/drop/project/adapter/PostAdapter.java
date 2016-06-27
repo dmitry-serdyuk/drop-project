@@ -25,12 +25,15 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.ViewHolder> {
 
     List<Post> posts;
     Context context;
-    int startDelay;
+    double latitude;
+    double longitude;
     OnItemClickListener mItemClickListener;
 
-    public PostAdapter(List<Post> posts, Context context) {
+    public PostAdapter(List<Post> posts, Context context, double latitude, double longitude) {
         this.posts = posts;
         this.context = context;
+        this.latitude = latitude;
+        this.longitude = longitude;
     }
 
     @Override
@@ -42,15 +45,33 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.ViewHolder> {
         return vh;
     }
 
+    public void reset() {
+        posts.clear();
+        this.notifyDataSetChanged();
+    }
+
+    public void add(Post post) {
+        posts.add(post);
+        notifyItemInserted(posts.size()-1);
+    }
+
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
         String imageFilePath = posts.get(position).getImageFilePath();
         Glide.with(context).load(imageFilePath).centerCrop().into(holder.postImage);
-    }
 
-    public void add(Post post, int position) {
-        posts.add(post);
-        notifyItemInserted(position);
+        //glide resources in to match with adapter item animation
+        Glide.with(context).load("").placeholder(
+                context.getDrawable(R.drawable.post_img_overlay)).into(holder.imageOverlay);
+
+        if (posts.get(position).isWithinRadius(latitude, longitude)) {
+            Glide.with(context).load("").placeholder(
+                    context.getDrawable(R.drawable.view_icon_activated)).into(holder.viewIcon);
+        } else {
+            Glide.with(context).load("").placeholder(
+                    context.getDrawable(R.drawable.view_icon)).into(holder.viewIcon);
+        }
+
     }
 
     @Override
@@ -60,11 +81,13 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.ViewHolder> {
 
     public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
-        public ImageView postImage;
+        public ImageView postImage, imageOverlay, viewIcon;
 
         public ViewHolder(View v) {
             super(v);
             postImage = ButterKnife.findById(v, R.id.postItem_image);
+            imageOverlay = ButterKnife.findById(v, R.id.postItem_postImgOverlay);
+            viewIcon = ButterKnife.findById(v, R.id.postItem_viewIcon);
             postImage.setOnClickListener(this);
         }
 
@@ -74,9 +97,6 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.ViewHolder> {
                 mItemClickListener.onItemClick(v, getPosition());
             }
         }
-
-
-
     }
 
     public interface OnItemClickListener {

@@ -14,4 +14,14 @@ public interface ViewPostPresenter extends MvpPresenter<ViewPostView> {
     void onSendReplyClick(Post post, String author, String annotation, String date, String imageFilePath);
 
     void onSelectImageClick();
+
+    void onStart(long postId);
+
+    void onLikeClick();
+
+    void onMainImgClick(String postImgFilePath);
+
+    void onBackClick();
+
+    void onDestroy(Post post, boolean liked);
 }

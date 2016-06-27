@@ -7,8 +7,8 @@ import java.util.List;
  */
 public interface PostModel {
 
-    Post savePost(String annotationText, String cameraImgFilePath, String thumbnailImgFilePath,
-                  double latitude, double longitude, String date);
+    void savePost(String annotationText, String cameraImgFilePath, String thumbnailImgFilePath,
+                  double latitude, double longitude, String date, SavePostCallback callback);
 
     void getReplies(Post post, GetRepliesCallback callback);
 
@@ -17,6 +17,8 @@ public interface PostModel {
     void getAllPosts(GetAllPostsCallback callback);
 
     void saveReply(Post post, String author, String annotation, String date, String imageFilePath, SaveReplyCallback callback);
+
+    void like(Post post, boolean liked);
 
     //debug Method
     void delete(long postId);
@@ -37,6 +39,12 @@ public interface PostModel {
 
     interface GetAllPostsCallback {
         void onSuccess(List<Post> posts);
+
+        void onError(String error);
+    }
+
+    interface SavePostCallback {
+        void onSuccess(Post post);
 
         void onError(String error);
     }

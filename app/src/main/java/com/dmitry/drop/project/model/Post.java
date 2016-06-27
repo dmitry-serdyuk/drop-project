@@ -8,6 +8,7 @@ import com.activeandroid.Model;
 import com.activeandroid.annotation.Column;
 import com.activeandroid.annotation.Table;
 import com.activeandroid.query.Select;
+import com.dmitry.drop.project.utility.Constants;
 import com.google.android.gms.maps.model.LatLng;
 
 import java.util.List;
@@ -19,7 +20,6 @@ import java.util.List;
 @Table(name = "Posts")
 public class Post extends Model implements Parcelable {
 
-    final float INIT_RADIUS = 100;
     @Column(name = "ImageFilePath")
     String imageFilePath;
     @Column(name = "ThumbnailFilePath")
@@ -34,6 +34,8 @@ public class Post extends Model implements Parcelable {
     float radius;
     @Column(name = "Date")
     String dateCreated;
+    @Column(name = "Likes")
+    int likes;
 
     // Needed for ActiveAndroid library
     public Post() {
@@ -48,7 +50,8 @@ public class Post extends Model implements Parcelable {
         this.latitude = latitude;
         this.longitude = longitude;
         this.dateCreated = dateCreated;
-        radius = INIT_RADIUS;
+        likes = 0;
+        radius = Constants.INIT_POST_RADIUS;
     }
 
     public static final Parcelable.Creator<Post> CREATOR
@@ -70,6 +73,7 @@ public class Post extends Model implements Parcelable {
         longitude = in.readDouble();
         radius = in.readFloat();
         dateCreated = in.readString();
+        likes = in.readInt();
     }
 
     public static List<Post> getAll() {
@@ -108,7 +112,7 @@ public class Post extends Model implements Parcelable {
         this.longitude = longitude;
     }
 
-    public double getRadius() {
+    public float getRadius() {
         return radius;
     }
 
@@ -142,6 +146,13 @@ public class Post extends Model implements Parcelable {
         return distance[0] < radius;
     }
 
+    public void like(boolean liked) {
+        if (liked) {
+            likes++;
+            radius += Constants.LIKE_ADD_RADIUS;
+        }
+    }
+
     @Override
     public int describeContents() {
         return 0;
@@ -156,5 +167,6 @@ public class Post extends Model implements Parcelable {
         parcel.writeDouble(longitude);
         parcel.writeFloat(radius);
         parcel.writeString(dateCreated);
+        parcel.writeInt(likes);
     }
 }

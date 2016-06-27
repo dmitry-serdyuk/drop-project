@@ -8,40 +8,38 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.support.v4.content.ContextCompat;
+import android.util.AttributeSet;
 import android.view.View;
 
 import com.dmitry.drop.project.R;
 
 public class CircleView extends View
 {
-    private static final int DEFAULT_CIRCLE_COLOR = Color.RED;
-
-    private int circleColor = DEFAULT_CIRCLE_COLOR;
     private Paint fillPaint, strokePaint;
-    private float radius;
+    private Context mContext;
     int x;
     int y;
 
-    public CircleView(Context context, float radius, int x, int y)
+    public CircleView(Context context, int x, int y)
     {
         super(context);
-        this.radius = radius;
+        mContext = context;
         this.x = x;
         this.y = y;
-        init(context);
+        init();
     }
 
-    private void init(Context context)
+    private void init()
     {
         fillPaint = new Paint();
         fillPaint.setAntiAlias(true);
         fillPaint.setStyle(Paint.Style.FILL);
-        fillPaint.setColor(ContextCompat.getColor(context, R.color.light_blue_50_transp));
+        fillPaint.setColor(ContextCompat.getColor(mContext, R.color.white_transp));
 
         strokePaint = new Paint();
         strokePaint.setAntiAlias(true);
         strokePaint.setStyle(Paint.Style.STROKE);
-        strokePaint.setColor(ContextCompat.getColor(context, R.color.blue));
+        strokePaint.setColor(ContextCompat.getColor(mContext, R.color.white));
         strokePaint.setStrokeWidth(1);
     }
 
@@ -49,7 +47,8 @@ public class CircleView extends View
     {
         super.onDraw(canvas);
 
-        canvas.drawCircle(x, y, radius, fillPaint);
-        canvas.drawCircle(x, y, radius, strokePaint);
+        canvas.drawCircle(x, y, 100, fillPaint);
+        canvas.drawCircle(x, y, 100, strokePaint);
     }
+
 }

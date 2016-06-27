@@ -37,23 +37,18 @@
         android:layout_height="match_parent"
         android:visibility="invisible" />
 
-    <LinearLayout
-        android:visibility="invisible"
-        android:id="@+id/worldMap_postSelectorLayout"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:layout_marginStart="10dp"
-        android:layout_marginEnd="10dp">
 
         <android.support.v7.widget.RecyclerView
             android:id="@+id/worldMap_postSelector"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:visibility="invisible"
+            android:layout_marginStart="10dp"
+            android:layout_marginEnd="10dp">
 
         </android.support.v7.widget.RecyclerView>
 
-    </LinearLayout>
+
 
 
 </RelativeLayout>

@@ -2,101 +2,115 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/viewPost_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/feint_blue"
-    android:paddingEnd="10dp"
-    android:paddingStart="10dp"
     tools:context="com.dmitry.drop.project.ViewPostActivity">
 
-
     <RelativeLayout
-        android:id="@+id/viewPost_postLayout"
+        android:id="@+id/viewPost_layout"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
-        android:layout_marginBottom="10dp">
+        android:layout_height="match_parent"
+        android:background="@color/feint_blue"
+        android:paddingEnd="10dp"
+        android:paddingStart="10dp">
+
 
         <RelativeLayout
-            android:id="@+id/viewPost_heading"
+            android:id="@+id/viewPost_postLayout"
             android:layout_width="match_parent"
-            android:layout_height="50dp">
-
-            <TextView
-                android:id="@+id/viewPost_annotation"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:layout_alignParentStart="true"
-                android:layout_marginRight="135dp"
-                android:gravity="center"
-                android:textAppearance="?android:attr/textAppearanceLarge"
-                android:textSize="20sp" />
-
-            <ImageView
-                android:layout_width="40dp"
-                android:layout_height="25dp"
-                android:layout_centerVertical="true"
-                android:layout_toLeftOf="@+id/viewPost_timeElapsed"
-                android:src="@drawable/ic_time" />
-
-            <TextView
-                android:id="@+id/viewPost_timeElapsed"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:layout_alignParentEnd="true"
-                android:gravity="center"
-                android:textAppearance="?android:attr/textAppearanceSmall"
-                android:textColor="@color/grey"
-                android:textSize="20sp" />
-
-        </RelativeLayout>
-
-        <RelativeLayout
-            android:id="@+id/viewPost_postImgFrame"
-            android:layout_width="match_parent"
-            android:layout_height="400dp"
-            android:layout_below="@+id/viewPost_heading">
-
-            <ImageView
-                android:id="@+id/viewPost_postImg"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:transitionName="@string/post_transition_name"
-                android:scaleType="centerCrop" />
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:layout_marginBottom="5dp">
 
             <RelativeLayout
-                android:id="@+id/viewPost_accountLayout"
+                android:id="@+id/viewPost_heading"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent">
+                android:layout_height="50dp">
+
+                <TextView
+                    android:id="@+id/viewPost_annotation"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_alignParentStart="true"
+                    android:layout_marginRight="135dp"
+                    android:gravity="center"
+                    android:textAppearance="?android:attr/textAppearanceLarge"
+                    android:textSize="20sp" />
 
                 <ImageView
-                    android:id="@+id/viewPost_postImgOverlay"
+                    android:layout_width="40dp"
+                    android:layout_height="25dp"
+                    android:layout_centerVertical="true"
+                    android:layout_toLeftOf="@+id/viewPost_timeElapsed"
+                    android:src="@drawable/ic_time" />
+
+                <TextView
+                    android:id="@+id/viewPost_timeElapsed"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_alignParentEnd="true"
+                    android:gravity="center"
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    android:textColor="@color/grey"
+                    android:textSize="20sp" />
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:id="@+id/viewPost_postImgFrame"
+                android:layout_width="match_parent"
+                android:layout_height="380dp"
+                android:layout_below="@+id/viewPost_heading">
+
+                <ImageView
+                    android:id="@+id/viewPost_postImg"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:scaleType="fitXY" />
+                    android:scaleType="centerCrop" />
 
                 <RelativeLayout
+                    android:id="@+id/viewPost_accountLayout"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_alignParentBottom="true"
-                    android:layout_margin="5dp">
-
-                    <TextView
-                        android:id="@+id/viewPost_author"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentRight="true"
-                        android:layout_below="@+id/viewPost_authorAccountIcon"
-                        android:text="Anonymous"
-                        android:textColor="@color/white" />
+                    android:layout_height="match_parent">
 
                     <ImageView
-                        android:id="@+id/viewPost_authorAccountIcon"
-                        android:layout_width="30dp"
-                        android:layout_height="30dp"
-                        android:layout_alignParentRight="true"
-                        android:src="@drawable/ic_account" />
+                        android:id="@+id/viewPost_postImgOverlay"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:scaleType="fitXY" />
+
+                    <pl.droidsonroids.gif.GifImageView
+                        android:id="@+id/viewPost_likeGif"
+                        android:layout_width="60dp"
+                        android:layout_height="100dp"
+                        android:layout_alignParentBottom="true"
+                        android:layout_alignParentLeft="true"
+                        android:layout_marginBottom="3dp"
+                        android:src="@drawable/like_placeholder"
+                        android:scaleType="fitEnd" />
+
+                    <RelativeLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentBottom="true"
+                        android:layout_margin="5dp">
+
+                        <TextView
+                            android:id="@+id/viewPost_author"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentRight="true"
+                            android:layout_below="@+id/viewPost_authorAccountIcon"
+                            android:text="Anonymous"
+                            android:textColor="@color/white" />
+
+                        <ImageView
+                            android:id="@+id/viewPost_authorAccountIcon"
+                            android:layout_width="30dp"
+                            android:layout_height="30dp"
+                            android:layout_alignParentRight="true"
+                            android:src="@drawable/ic_account" />
+
+                    </RelativeLayout>
 
                 </RelativeLayout>
 
@@ -104,67 +118,74 @@
 
         </RelativeLayout>
 
-    </RelativeLayout>
-
-    <com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayout
-        android:id="@+id/viewPost_swipeRefreshLayout"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_above="@+id/viewPost_barLayout"
-        android:layout_below="@+id/viewPost_postLayout"
-        android:layout_marginBottom="5dp"
-        android:background="@color/white"
-        app:srl_direction="bottom">
-
-        <android.support.v7.widget.RecyclerView
-            android:id="@+id/viewPost_repliesRecyclerView"
+        <com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayout
+            android:id="@+id/viewPost_swipeRefreshLayout"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:scrollbars="vertical" />
-
-    </com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayout>
-
-    <RelativeLayout
-        android:id="@+id/viewPost_repliesPlaceholder"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_above="@+id/viewPost_barLayout"
-        android:layout_below="@+id/viewPost_postLayout">
-
-        <TextView
-            android:id="@+id/viePost_noRepliesPlaceholder"
-            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_centerHorizontal="true"
-            android:layout_centerVertical="true"
-            android:text="No Replies"
-            android:textColor="@color/grey"
-            android:textSize="22dp"
-            android:visibility="invisible" />
+            android:layout_above="@+id/viewPost_barLayout"
+            android:layout_below="@+id/viewPost_postLayout"
+            android:layout_marginBottom="5dp"
 
-        <ProgressBar
-            android:id="@+id/viewPost_repliesLoading"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:layout_centerHorizontal="true"
-            android:layout_centerVertical="true"
-            android:indeterminate="true"
-            android:visibility="invisible" />
+            app:srl_direction="bottom">
+
+            <android.support.v7.widget.RecyclerView
+                android:id="@+id/viewPost_repliesRecyclerView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scrollbars="vertical" />
+
+        </com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayout>
+
+        <RelativeLayout
+            android:id="@+id/viewPost_repliesPlaceholder"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_above="@+id/viewPost_barLayout"
+            android:layout_below="@+id/viewPost_postLayout">
+
+            <TextView
+                android:id="@+id/viePost_noRepliesPlaceholder"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerHorizontal="true"
+                android:layout_centerVertical="true"
+                android:text="Nothing here yet"
+                android:textColor="@color/grey"
+                android:textSize="22dp"
+                android:visibility="invisible" />
+
+            <ProgressBar
+                android:id="@+id/viewPost_repliesLoading"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:layout_centerHorizontal="true"
+                android:layout_centerVertical="true"
+                android:indeterminate="true"
+                android:visibility="invisible" />
+
+        </RelativeLayout>
+
+        <LinearLayout
+            android:id="@+id/viewPost_barLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_marginBottom="3dp"
+            android:background="@color/white">
+
+            <include
+                layout="@layout/reply_bar_layout"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                />
+        </LinearLayout>
 
     </RelativeLayout>
 
-    <LinearLayout
-        android:id="@+id/viewPost_barLayout"
+    <ImageView
+        android:id="@+id/viewPost_viewFullImage"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_marginBottom="3dp"
-        android:background="@color/feint_blue">
-
-        <include
-            layout="@layout/reply_bar_layout"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent" />
-
-    </LinearLayout>
+        android:layout_height="match_parent"
+        android:scaleType="centerCrop"
+        android:visibility="invisible" />
 </RelativeLayout>

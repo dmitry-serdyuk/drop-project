@@ -12,7 +12,7 @@ public interface CreatePostView extends MvpView {
     String LATITUDE_EXTRA = "latitude";
     String LONGITUDE_EXTRA = "longitude";
 
-    void onDropButtonClick();
+    void showSavePostError(String error);
 
     void returnToWorldMap(Post post);
 }

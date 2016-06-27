@@ -1,38 +1,32 @@
 package com.dmitry.drop.project;
 
-
 import android.Manifest;
-import android.animation.Animator;
 import android.animation.ValueAnimator;
-import android.app.ActivityOptions;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Point;
+import android.graphics.drawable.Drawable;
 import android.location.Location;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.content.ContextCompat;
-import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.transition.Fade;
-import android.transition.Slide;
 import android.util.Log;
-import android.view.MotionEvent;
 import android.view.View;
-import android.view.animation.Animation;
 import android.view.animation.Interpolator;
 import android.widget.Button;
 import android.widget.FrameLayout;
-import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
-import android.widget.Toast;
 
 import com.dmitry.drop.project.adapter.PostAdapter;
 import com.dmitry.drop.project.model.Post;
 import com.dmitry.drop.project.model.PostModelImpl;
 import com.dmitry.drop.project.presenter.WorldMapPresenter;
 import com.dmitry.drop.project.presenter.WorldMapPresenterImpl;
+import com.dmitry.drop.project.utility.AnimUtils;
 import com.dmitry.drop.project.utility.CircleView;
 import com.dmitry.drop.project.utility.Constants;
 import com.dmitry.drop.project.utility.PermissionUtils;
@@ -56,6 +50,7 @@ import com.google.android.gms.maps.model.GroundOverlayOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.hannesdorfmann.mosby.mvp.MvpActivity;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -63,8 +58,8 @@ import java.util.List;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
-import jp.wasabeef.recyclerview.adapters.AlphaInAnimationAdapter;
 import jp.wasabeef.recyclerview.animators.FadeInAnimator;
+import pl.droidsonroids.gif.GifDrawable;
 
 import static com.dmitry.drop.project.utility.AnimUtils.getFastOutSlowInInterpolator;
 
@@ -79,13 +74,27 @@ public class WorldMapActivity extends MvpActivity<WorldMapView, WorldMapPresente
         GoogleMap.OnCameraChangeListener,
         GoogleMap.OnMyLocationButtonClickListener {
 
-    static final int ADD_POST_REQUEST = 1;
-    static final int VIEW_POST_REQUEST = 2;
+
+    //Constants
+    //Intent requests
+
+    private static final int CENTRE_MARKER_RADIUS = 55;
+    private static final int CAN_REPLY_RADIUS = 30;
     //Google Play request codes
-    private final static int PLAY_SERVICES_RESOLUTION_REQUEST = 1000;
+    private static final int PLAY_SERVICES_RESOLUTION_REQUEST = 1000;
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1;
+
+    public static final float POST_RADIUS_OFFSET = 3f;
+    public static final float POST_THUMB_TRANSPARENCY = 0.3f;
+    // Location updates intervals in sec
+    public static int UPDATE_INTERVAL = 500; // 1 sec
+    public static int FATEST_INTERVAL = 100; // 0.2 sec
+
+    //Camera constants
+    public static int CAMERA_TILT = 30;
+    public static int CAMERA_ZOOM = 15;
+
     //Default Circle variable
-    private final static int RADIUS = 100;
     @BindView(R.id.map)
     MapView mMapView;
     @BindView(R.id.worldMap_layout)
@@ -94,8 +103,7 @@ public class WorldMapActivity extends MvpActivity<WorldMapView, WorldMapPresente
     Button debugDeleteButton;
     @BindView(R.id.woldMap_postReveal)
     FrameLayout postReveal;
-    @BindView(R.id.worldMap_postSelectorLayout)
-    LinearLayout postSelectorLayout;
+
     @BindView(R.id.worldMap_postSelector)
     RecyclerView postSelector;
     private GoogleMap mMap;
@@ -121,9 +129,12 @@ public class WorldMapActivity extends MvpActivity<WorldMapView, WorldMapPresente
         setContentView(R.layout.activity_world_map);
         ButterKnife.bind(this);
 
-        postReveal.setAlpha(0.2f);
 
+        postSelector.setLayoutManager(new RecyclerViewUtils.LinearLayoutManagerWithSmoothScroller(this));
 
+        postSelector.addItemDecoration(new RecyclerViewUtils.SimpleDividerItemDecoration(this));
+        postSelector.setItemAnimator(new FadeInAnimator());
+        postSelector.getItemAnimator().setAddDuration(AnimUtils.ONE_SECOND);
 
         PermissionUtils.verifyStoragePermissions(this);
 
@@ -192,9 +203,9 @@ public class WorldMapActivity extends MvpActivity<WorldMapView, WorldMapPresente
         if (mLastLocation != null) {
             CameraPosition cameraPosition = new CameraPosition.Builder()
                     .target(new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude()))
-                    .zoom(Constants.ZOOM)
+                    .zoom(CAMERA_ZOOM)
                     .bearing(mLastLocation.getBearing())
-                    .tilt(Constants.TILT)
+                    .tilt(CAMERA_TILT)
                     .build();
 
             mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
@@ -211,16 +222,33 @@ public class WorldMapActivity extends MvpActivity<WorldMapView, WorldMapPresente
     }
 
     @Override
-    public void viewPost(Post post) {
+    public void viewPost(final Post post) {
         if (debugDelete) {
             postModel.delete(post.getId());
             mMap.clear();
             mMapView.invalidate();
             presenter.onStart();
         } else {
-            Intent viewPost = ViewPostActivity.createIntent(this, post);
-            startActivityForResult(viewPost, VIEW_POST_REQUEST);
+            showPostClickAnim(post.getLatitude(), post.getLongitude(), new ValueAnimator.AnimatorUpdateListener() {
+                @Override
+                public void onAnimationUpdate(ValueAnimator animation) {
+                    if (animation.getCurrentPlayTime() > AnimUtils.VIEW_POST / 2) {
+                        animation.removeAllUpdateListeners();
+                        Intent viewPost = ViewPostActivity.createIntent(WorldMapActivity.this, post.getId(), canReply(post));
+                        startActivityForResult(viewPost, VIEW_POST_REQUEST);
+                    }
+                }
+            });
         }
+    }
+
+    private boolean canReply(Post post) {
+        if (mLastLocation != null) {
+            float[] distance = new float[1];
+            Location.distanceBetween(post.getLatitude(), post.getLongitude(), mLastLocation.getLatitude(), mLastLocation.getLongitude(), distance);
+            return distance[0] < CAN_REPLY_RADIUS;
+        }
+        return false;
     }
 
     @Override
@@ -232,74 +260,65 @@ public class WorldMapActivity extends MvpActivity<WorldMapView, WorldMapPresente
     @Override
     public void addPost(Post post) {
         posts.add(post);
-        drawPost(post);
     }
 
-
-    //TODO: Errors
     @Override
-    public void showPostSelector(final List<Post> clickedPosts) {
+    public void showPostClickAnim(double latitude, double longitude, ValueAnimator.AnimatorUpdateListener listener) {
 
-        Post post = clickedPosts.get(0);
-        LatLng pos = new LatLng(post.getLatitude(), post.getLongitude());
-
+        LatLng pos = new LatLng(latitude, longitude);
         Projection projection = mMap.getProjection();
         Point screenPosition = projection.toScreenLocation(pos);
 
-        CircleView circle = new CircleView(this, (float) post.getRadius(), screenPosition.x, screenPosition.y);
-        postReveal.addView(circle);
+        CircleView circleExpandAnim = new CircleView(this, screenPosition.x, screenPosition.y);
+        postReveal.addView(circleExpandAnim);
         postReveal.setVisibility(View.VISIBLE);
+
         Interpolator interp = getFastOutSlowInInterpolator(this);
 
-        postReveal.setScaleX(1);
-        postReveal.setTranslationY(1);
+        postReveal.setAlpha(AnimUtils.TRANSPARENT_ALPHA);
         postReveal.setPivotX(screenPosition.x);
         postReveal.setPivotY(screenPosition.y);
-
         postReveal.animate()
-                .alpha(1f)
-                .scaleX(18)
-                .scaleY(18)
-                .setDuration(1500)
+                .alpha(AnimUtils.ORIGINAL_ALPHA)
+                .scaleX(AnimUtils.MAXIMUM_SCALE)
+                .scaleY(AnimUtils.MAXIMUM_SCALE)
+                .setDuration(AnimUtils.VIEW_POST)
+                .setUpdateListener(listener)
                 .setInterpolator(interp)
-                .setUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-                    @Override
-                    public void onAnimationUpdate(ValueAnimator animation) {
-                        if (animation.getCurrentPlayTime() >= 1000) {
-                            showSelectedPosts(clickedPosts);
-                            animation.removeAllUpdateListeners();
-                        }
-
-                    }
-                })
                 .start();
-
     }
 
-    private void showSelectedPosts(final List<Post> clickedPosts) {
-        postSelectorLayout.setVisibility(View.VISIBLE);
-        postSelector.setLayoutManager(new RecyclerViewUtils.LinearLayoutManagerWithSmoothScroller(this));
-
-        List<Post> animatePosts = new ArrayList<Post>();
-        postSelector.addItemDecoration(new RecyclerViewUtils.SimpleDividerItemDecoration(this));
-        postSelector.setItemAnimator(new FadeInAnimator());
-        postSelector.getItemAnimator().setAddDuration(3000);
-        mAdapter = new PostAdapter(clickedPosts, this);
-        //AlphaInAnimationAdapter adapter = new AlphaInAnimationAdapter(mAdapter);
-        //dapter.setDuration(5000);
-
-        mAdapter.SetOnItemClickListener(new PostAdapter.OnItemClickListener() {
+    //TODO: Errors
+    @Override
+    public void showPostSelector(double latitude, double longitude, final List<Post> clickedPosts) {
+        showPostClickAnim(latitude, longitude, new ValueAnimator.AnimatorUpdateListener() {
             @Override
-            public void onItemClick(View view, int position) {
-                Intent intent = new Intent(WorldMapActivity.this, ViewPostActivity.class);
-                View sharedView = view;
-                intent.putExtra("post", clickedPosts.get(position));
+            public void onAnimationUpdate(ValueAnimator animation) {
+                if (animation.getCurrentPlayTime() > AnimUtils.VIEW_POST / 2) {
+                    animation.removeAllUpdateListeners();
+                    postSelector.setVisibility(View.VISIBLE);
 
-                startActivity(intent);
+                    List<Post> animatePost = new ArrayList<>();
+                    mAdapter = new PostAdapter(animatePost, WorldMapActivity.this, mLastLocation.getLatitude(), mLastLocation.getLongitude());
+
+
+                    mAdapter.SetOnItemClickListener(new PostAdapter.OnItemClickListener() {
+                        @Override
+                        public void onItemClick(View view, int position) {
+                            viewPost(clickedPosts.get(position));
+                        }
+                    });
+                    postSelector.setAdapter(mAdapter);
+
+                    //insert each clicked post individually in order to animate them
+                    for (Post post : clickedPosts) {
+                        mAdapter.add(post);
+                    }
+                }
             }
         });
-        postSelector.setAdapter(mAdapter);
     }
+
 
     @Override
     public void showClickPostError(String error) {
@@ -322,34 +341,70 @@ public class WorldMapActivity extends MvpActivity<WorldMapView, WorldMapPresente
 
         if (requestCode == ADD_POST_REQUEST && resultCode == RESULT_OK) {
             addPost((Post) data.getParcelableExtra(CreatePostView.POST_EXTRA));
+        } else if (requestCode == VIEW_POST_REQUEST) {
+            resetViewPostAnim();
+            resetPostSelector();
         }
+        drawAllPosts();
+    }
+
+    private void resetPostSelector() {
+        if (mAdapter != null)
+            mAdapter.reset();
+    }
+
+    private void resetViewPostAnim() {
+        postReveal.removeAllViews();
+        postReveal.setVisibility(View.INVISIBLE);
+        postReveal.setScaleX(AnimUtils.ORIGINAL_SCALE);
+        postReveal.setScaleY(AnimUtils.ORIGINAL_SCALE);
     }
 
     private void addPostThumbnail(Post post) {
         LatLng postPosition = new LatLng(post.getLatitude(), post.getLongitude());
         GroundOverlayOptions postPicture = new GroundOverlayOptions()
                 .image(BitmapDescriptorFactory.fromPath(post.getThumbnailFilePath()))
-                .position(postPosition, (float) post.getRadius() + Constants.POST_RADIUS_OFFSET)
-                .transparency(Constants.POST_THUMB_TRANSPARENCY);
+                .position(postPosition, post.getRadius() * POST_RADIUS_OFFSET)
+                .transparency(POST_THUMB_TRANSPARENCY);
 
         mMap.addGroundOverlay(postPicture);
+
+        Bitmap centreMarkerBitmap;
+        if(canReply(post))
+            centreMarkerBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.centre_mark_activated);
+        else
+            centreMarkerBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.centre_mark);
+
+
+        GroundOverlayOptions centreMark = new GroundOverlayOptions()
+                .image(BitmapDescriptorFactory.fromBitmap(centreMarkerBitmap))
+                .position(postPosition, CENTRE_MARKER_RADIUS);
+
+        mMap.addGroundOverlay(centreMark);
+
     }
 
     /* ------------------------ Google Maps Methods ------------------------ */
 
-    private void addPostCircle(double latitude, double longitude) {
+    private void addPostCircle(Post post) {
         CircleOptions circleOptions = new CircleOptions()
-                .center(new LatLng(latitude, longitude))
-                .radius(RADIUS);
+                .center(new LatLng(post.getLatitude(), post.getLongitude()))
+                .radius(post.getRadius());
 
-        circleOptions.strokeColor(ContextCompat.getColor(this, R.color.blue));
-        circleOptions.fillColor(ContextCompat.getColor(this, R.color.light_blue_transp));
+        if (canReply(post)) {
+            circleOptions.strokeColor(ContextCompat.getColor(this, R.color.green));
+            circleOptions.fillColor(ContextCompat.getColor(this, R.color.light_green_transp));
+        } else {
+            circleOptions.strokeColor(ContextCompat.getColor(this, R.color.blue));
+            circleOptions.fillColor(ContextCompat.getColor(this, R.color.light_blue_transp));
+        }
         mMap.addCircle(circleOptions);
     }
 
     @Override
     public void onMapReady(GoogleMap map) {
         mMap = map;
+        map.setIndoorEnabled(false);
         map.setOnMapClickListener(this);
         map.setOnCameraChangeListener(this);
         map.setOnMyLocationButtonClickListener(this);
@@ -358,6 +413,8 @@ public class WorldMapActivity extends MvpActivity<WorldMapView, WorldMapPresente
     }
 
     private void drawAllPosts() {
+        mMap.clear();
+        mMapView.invalidate();
         for (Post post : posts) {
             drawPost(post);
         }
@@ -366,7 +423,7 @@ public class WorldMapActivity extends MvpActivity<WorldMapView, WorldMapPresente
     /* ------------------------ Google Services Methods ------------------------ */
 
     private void drawPost(Post post) {
-        addPostCircle(post.getLatitude(), post.getLongitude());
+        addPostCircle(post);
         addPostThumbnail(post);
     }
 
@@ -433,8 +490,8 @@ public class WorldMapActivity extends MvpActivity<WorldMapView, WorldMapPresente
 
     protected void createLocationRequest() {
         mLocationRequest = new LocationRequest();
-        mLocationRequest.setInterval(Constants.UPDATE_INTERVAL);
-        mLocationRequest.setFastestInterval(Constants.FATEST_INTERVAL);
+        mLocationRequest.setInterval(UPDATE_INTERVAL);
+        mLocationRequest.setFastestInterval(FATEST_INTERVAL);
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
         mLocationRequest.setSmallestDisplacement(Constants.DISPLACEMENT);
     }
@@ -479,6 +536,7 @@ public class WorldMapActivity extends MvpActivity<WorldMapView, WorldMapPresente
     public void onLocationChanged(Location location) {
         // Assign the new location
         mLastLocation = location;
+        drawAllPosts();
 
         if (mCameraTracking)
             moveCameraToMyLocation();
@@ -518,7 +576,7 @@ public class WorldMapActivity extends MvpActivity<WorldMapView, WorldMapPresente
 
     @Override
     public void onCameraChange(CameraPosition cameraPosition) {
-        if (cameraPosition.zoom != Constants.ZOOM) {
+        if (cameraPosition.zoom != CAMERA_ZOOM) {
             mCameraTracking = false;
         }
     }
@@ -536,6 +594,16 @@ public class WorldMapActivity extends MvpActivity<WorldMapView, WorldMapPresente
         } else {
             debugDeleteButton.setBackgroundColor(ContextCompat.getColor(this, R.color.transparent_white));
             debugDelete = false;
+        }
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (postReveal.getVisibility() == View.VISIBLE) {
+            resetViewPostAnim();
+            resetPostSelector();
+        } else {
+            super.onBackPressed();
         }
     }
 }

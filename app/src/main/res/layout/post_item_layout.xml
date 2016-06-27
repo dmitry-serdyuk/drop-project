@@ -12,21 +12,19 @@
         android:layout_height="match_parent"
         android:transitionName="@string/post_transition_name"/>
 
-
-
     <ImageView
-        android:id="@+id/viewPost_postImgOverlay"
+        android:id="@+id/postItem_postImgOverlay"
         android:layout_width="match_parent"
-        android:src="@drawable/post_img_overlay"
         android:layout_height="match_parent"
         android:scaleType="fitXY" />
 
     <ImageView
+        android:id="@+id/postItem_viewIcon"
         android:layout_width="75dp"
         android:layout_height="50dp"
-        android:src="@drawable/view_icon"
+
         android:layout_alignParentBottom="true"
         android:layout_alignParentRight="true"
-        android:layout_margin="10dp"/>
+        android:layout_marginRight="10dp"/>
 
 </RelativeLayout>

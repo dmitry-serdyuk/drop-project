@@ -11,29 +11,31 @@ import java.util.List;
 public class PostModelImpl implements PostModel {
 
     @Override
-    public Post savePost(String annotationText, String cameraImgFilePath,
-                         String thumbnailImgFilePath, double latitude, double longitude, String date) {
+    public void savePost(String annotationText, String cameraImgFilePath,
+                         String thumbnailImgFilePath, double latitude,
+                         double longitude, String date, SavePostCallback callback) {
         Post post = new Post(annotationText, cameraImgFilePath,
                 thumbnailImgFilePath, latitude, longitude, date);
         post.save();
 
-        //return the saved post to be added to world map
-        return post;
+        if (post!=null)
+            callback.onSuccess(post);
+        else
+            callback.onError("Could not save post");
     }
 
     @Override
     public void getReplies(final Post post, final GetRepliesCallback callback) {
-        final List<Reply> replies = post.replies();
         new RepliesAsyncLoader(
                 new RepliesAsyncLoader.RepliesLoaderListener() {
                     @Override
                     public void onSuccess() {
-                        //List<Reply> replies = post.replies();
-                        /*if (post != null) {
+                        List<Reply> replies;
+                        if (post != null) {
                             replies = post.replies();
                         } else {
                             replies = Collections.emptyList();
-                        } */
+                        }
                         callback.onSuccess(replies);
                     }
 
@@ -50,10 +52,9 @@ public class PostModelImpl implements PostModel {
         if (post != null) {
             callback.onSuccess(post);
         } else {
-            callback.onError("Don't have a post with that id.");
+            callback.onError("Cannot load post");
         }
     }
-
 
     @Override
     public void getAllPosts(GetAllPostsCallback callback) {
@@ -73,6 +74,12 @@ public class PostModelImpl implements PostModel {
             callback.onSuccess();
         else
             callback.onError("Could not save reply.");
+    }
+
+    @Override
+    public void like(Post post, boolean liked) {
+        post.like(liked);
+        post.save();
     }
 
     //Debug
