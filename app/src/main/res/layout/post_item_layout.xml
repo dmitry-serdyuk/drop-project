@@ -6,23 +6,20 @@
     android:paddingTop="5dp">
 
     <ImageView
-
         android:id="@+id/postItem_image"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:transitionName="@string/post_transition_name"/>
+        android:layout_height="match_parent"/>
 
     <ImageView
         android:id="@+id/postItem_postImgOverlay"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:scaleType="fitXY" />
+        android:scaleType="fitXY"/>
 
     <ImageView
         android:id="@+id/postItem_viewIcon"
         android:layout_width="75dp"
         android:layout_height="50dp"
-
         android:layout_alignParentBottom="true"
         android:layout_alignParentRight="true"
         android:layout_marginRight="10dp"/>

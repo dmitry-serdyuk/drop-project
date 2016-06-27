@@ -3,12 +3,12 @@ package com.dmitry.drop.project.model;
 import android.os.AsyncTask;
 
 /**
- * Created by Laptop on 15/06/2016.
+ * Created by Dmitry on 15/06/2016.
+ *
+ * This class simulates the back end call to an online storage
  */
 public class RepliesAsyncLoader extends AsyncTask<Void, Void, Void> {
 
-
-    private boolean shouldFail;
     private RepliesLoaderListener listener;
     public RepliesAsyncLoader(RepliesLoaderListener listener) {
         this.listener = listener;
@@ -32,8 +32,8 @@ public class RepliesAsyncLoader extends AsyncTask<Void, Void, Void> {
     }
 
     public interface RepliesLoaderListener {
-        public void onSuccess();
+        void onSuccess();
 
-        public void onError(Exception e);
+        void onError(Exception e);
     }
 }

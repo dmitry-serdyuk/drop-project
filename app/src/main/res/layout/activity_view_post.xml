@@ -6,6 +6,7 @@
     android:layout_height="match_parent"
     tools:context="com.dmitry.drop.project.ViewPostActivity">
 
+    <!-- Main layout for the activity, displays everything apart from full screen view -->
     <RelativeLayout
         android:id="@+id/viewPost_layout"
         android:layout_width="match_parent"
@@ -14,7 +15,8 @@
         android:paddingEnd="10dp"
         android:paddingStart="10dp">
 
-
+        <!-- Layout used to display annotation, timespan,
+        post photo, photo frame, user details, and like button -->
         <RelativeLayout
             android:id="@+id/viewPost_postLayout"
             android:layout_width="match_parent"
@@ -22,6 +24,7 @@
             android:layout_alignParentTop="true"
             android:layout_marginBottom="5dp">
 
+            <!-- Post heading layout -->
             <RelativeLayout
                 android:id="@+id/viewPost_heading"
                 android:layout_width="match_parent"
@@ -55,6 +58,7 @@
                     android:textSize="20sp" />
             </RelativeLayout>
 
+            <!-- Photo frame which overlays the post photo -->
             <RelativeLayout
                 android:id="@+id/viewPost_postImgFrame"
                 android:layout_width="match_parent"
@@ -78,6 +82,7 @@
                         android:layout_height="match_parent"
                         android:scaleType="fitXY" />
 
+                    <!-- Like button -->
                     <pl.droidsonroids.gif.GifImageView
                         android:id="@+id/viewPost_likeGif"
                         android:layout_width="60dp"
@@ -88,6 +93,7 @@
                         android:src="@drawable/like_placeholder"
                         android:scaleType="fitEnd" />
 
+                    <!-- User account layout -->
                     <RelativeLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -118,6 +124,8 @@
 
         </RelativeLayout>
 
+        <!-- Recycler layout with swipe down to refresh,
+         used to diplay post replies -->
         <com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayout
             android:id="@+id/viewPost_swipeRefreshLayout"
             android:layout_width="match_parent"
@@ -136,6 +144,7 @@
 
         </com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayout>
 
+        <!-- Empty state and loading layout -->
         <RelativeLayout
             android:id="@+id/viewPost_repliesPlaceholder"
             android:layout_width="match_parent"
@@ -143,16 +152,12 @@
             android:layout_above="@+id/viewPost_barLayout"
             android:layout_below="@+id/viewPost_postLayout">
 
-            <TextView
+            <ImageView
                 android:id="@+id/viePost_noRepliesPlaceholder"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_centerHorizontal="true"
-                android:layout_centerVertical="true"
-                android:text="Nothing here yet"
-                android:textColor="@color/grey"
-                android:textSize="22dp"
-                android:visibility="invisible" />
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:src="@drawable/empty_state"
+                android:visibility="invisible"/>
 
             <ProgressBar
                 android:id="@+id/viewPost_repliesLoading"
@@ -165,6 +170,8 @@
 
         </RelativeLayout>
 
+        <!-- Reply bar layout
+             Will be hidden if user is not within post radius -->
         <LinearLayout
             android:id="@+id/viewPost_barLayout"
             android:layout_width="match_parent"
@@ -182,10 +189,13 @@
 
     </RelativeLayout>
 
+    <!-- Full screen view
+         Used for post and reply photos-->
     <ImageView
         android:id="@+id/viewPost_viewFullImage"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:scaleType="centerCrop"
         android:visibility="invisible" />
+
 </RelativeLayout>

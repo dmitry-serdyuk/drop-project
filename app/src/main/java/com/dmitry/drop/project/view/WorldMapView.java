@@ -1,8 +1,6 @@
 package com.dmitry.drop.project.view;
 
-import android.animation.Animator;
 import android.animation.ValueAnimator;
-import android.view.animation.Animation;
 
 import com.dmitry.drop.project.model.Post;
 import com.hannesdorfmann.mosby.mvp.MvpView;
@@ -10,12 +8,14 @@ import com.hannesdorfmann.mosby.mvp.MvpView;
 import java.util.List;
 
 /**
- * Created by Laptop on 22/05/2016.
+ * Created by Dmitry on 22/05/2016.
+ *
+ * View interfaces are implemented by activities and used by the presenters to interact with the view
  */
 public interface WorldMapView extends MvpView {
 
-    static final int ADD_POST_REQUEST = 1;
-    static final int VIEW_POST_REQUEST = 2;
+    int ADD_POST_REQUEST = 1;
+    int VIEW_POST_REQUEST = 2;
 
     void moveCameraToMyLocation();
 

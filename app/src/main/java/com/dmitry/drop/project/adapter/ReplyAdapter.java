@@ -24,7 +24,7 @@ import java.util.Locale;
 import butterknife.ButterKnife;
 
 /**
- * Created by Laptop on 16/06/2016.
+ * Created by Dmitry on 16/06/2016.
  */
 public class ReplyAdapter extends RecyclerView.Adapter<ReplyAdapter.ViewHolder> {
 
@@ -32,17 +32,14 @@ public class ReplyAdapter extends RecyclerView.Adapter<ReplyAdapter.ViewHolder> 
     Context context;
     OnItemClickListener mItemClickListener;
 
-    // Provide a suitable constructor (depends on the kind of dataset)
     public ReplyAdapter(List<Reply> replies, Context context) {
         this.replies = replies;
         this.context = context;
     }
 
-    // Create new views (invoked by the layout manager)
     @Override
     public ReplyAdapter.ViewHolder onCreateViewHolder(ViewGroup parent,
                                                       int viewType) {
-        // create a new view
         View v = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.reply_item_layout, parent, false);
 
@@ -50,11 +47,8 @@ public class ReplyAdapter extends RecyclerView.Adapter<ReplyAdapter.ViewHolder> 
         return vh;
     }
 
-    // Replace the contents of a view (invoked by the layout manager)
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
-        // - get element from your dataset at this position
-        // - replace the contents of the view with that element
 
         String imageFilePath = replies.get(position).getImageFilePath();
         String elapsedTime = getReplyTimeSpan(replies.get(position).getDateCreated());
@@ -87,17 +81,12 @@ public class ReplyAdapter extends RecyclerView.Adapter<ReplyAdapter.ViewHolder> 
         return timeSpan;
     }
 
-    // Return the size of your dataset (invoked by the layout manager)
     @Override
     public int getItemCount() {
         return replies.size();
     }
 
-    // Provide a reference to the views for each data item
-    // Complex data items may need more than one view per item, and
-    // you provide access to all the views for a data item in a view holder
     public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
-        // each data item is just a string in this case
 
         public TextView authorTextView, commentTextView, dateTextView;
         public ImageView replyImage;

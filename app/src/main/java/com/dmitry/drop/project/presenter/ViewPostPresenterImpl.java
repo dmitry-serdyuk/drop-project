@@ -3,14 +3,19 @@ package com.dmitry.drop.project.presenter;
 import com.dmitry.drop.project.model.Post;
 import com.dmitry.drop.project.model.PostModel;
 import com.dmitry.drop.project.model.Reply;
-import com.dmitry.drop.project.model.ReplyModel;
 import com.dmitry.drop.project.view.ViewPostView;
 import com.hannesdorfmann.mosby.mvp.MvpBasePresenter;
 
 import java.util.List;
 
 /**
- * Created by Laptop on 15/06/2016.
+ * Created by Dmitry on 15/06/2016.
+ *
+ * Presenter implementations handle view events such as onStart or onClick
+ * The presenter interacts with a data model to retrieve data through callbacks
+ * This data is then passed to the view along with any loading or error calls
+ *
+ * The model instance is obtain from an activity
  */
 public class ViewPostPresenterImpl extends MvpBasePresenter<ViewPostView> implements ViewPostPresenter {
 
@@ -67,7 +72,7 @@ public class ViewPostPresenterImpl extends MvpBasePresenter<ViewPostView> implem
     }
 
     @Override
-    public void onSelectImageClick() {
+    public void onTakeReplyPhotoClick() {
         if (isViewAttached())
             getView().takeReplyPicture();
     }

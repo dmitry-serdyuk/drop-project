@@ -1,12 +1,19 @@
 package com.dmitry.drop.project.model;
 
+import android.content.res.Resources;
+import android.support.v4.content.ContextCompat;
+
 import com.activeandroid.query.Select;
+import com.dmitry.drop.project.R;
 
 import java.util.Collections;
 import java.util.List;
 
 /**
- * Created by Laptop on 20/06/2016.
+ * Created by Dmitry on 20/06/2016.
+ *
+ * Post model implementation handles database operations.
+ * Model Implementations are accessed by the presenters to retrieve data
  */
 public class PostModelImpl implements PostModel {
 
@@ -18,10 +25,10 @@ public class PostModelImpl implements PostModel {
                 thumbnailImgFilePath, latitude, longitude, date);
         post.save();
 
-        if (post!=null)
+        if (post != null)
             callback.onSuccess(post);
         else
-            callback.onError("Could not save post");
+            callback.onError(Resources.getSystem().getString(R.string.save_post_error));
     }
 
     @Override
@@ -52,7 +59,7 @@ public class PostModelImpl implements PostModel {
         if (post != null) {
             callback.onSuccess(post);
         } else {
-            callback.onError("Cannot load post");
+            callback.onError(Resources.getSystem().getString(R.string.load_post_error));
         }
     }
 
@@ -62,7 +69,7 @@ public class PostModelImpl implements PostModel {
         if (posts != null)
             callback.onSuccess(posts);
         else
-            callback.onError("Could not get posts.");
+            callback.onError(Resources.getSystem().getString(R.string.load_all_posts_error));
     }
 
     @Override
@@ -70,10 +77,10 @@ public class PostModelImpl implements PostModel {
         Reply reply = new Reply(post, author, annotation, date, imageFilePath);
         reply.save();
         reply = new Select().from(Reply.class).where("id = ?", reply.getId()).executeSingle();
-        if(reply != null)
+        if (reply != null)
             callback.onSuccess();
         else
-            callback.onError("Could not save reply.");
+            callback.onError(Resources.getSystem().getString(R.string.save_reply_error));
     }
 
     @Override

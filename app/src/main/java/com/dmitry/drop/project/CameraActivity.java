@@ -30,13 +30,25 @@ import java.util.Date;
 import java.util.Locale;
 
 /**
- * Created by Laptop on 20/06/2016.
+ * Created by Dmitry on 20/06/2016.
+ *
+ * Called by CreatePostView and ViewPostActivity to capture and store and photo
+ *
+ * Open the default camera app on the phone and requests to take a photo
+ * The returned image is split into the camera photo and a thumbnail to be used in WorldMapView
+ * The thumbnail undergoes a series of graphics transformation until it is saved into a file
  */
 public class CameraActivity extends Activity {
 
+    // Constants
+    //================================================================================
     public static final String CAMERA_IMG_FILE_PATH = "cameraImgFilePath";
     public static final String THUMBNAIL_IMG_FILE_PATH = "thumbnailImgFilePath";
     private static final int REQUEST_TAKE_PHOTO = 1;
+
+
+    // Variables
+    //================================================================================
     private File mCameraImgFile;
     private File mThumbnailImgFile;
     private String mCameraImgFilePath;
@@ -44,11 +56,14 @@ public class CameraActivity extends Activity {
     private Bitmap mCameraImgBitmap;
     private Bitmap mThumbnailBitmap;
 
+    //Create an intent for this class with all the necessary extras
     public static Intent createIntent(Context context) {
         Intent intent = new Intent(context, CameraActivity.class);
         return intent;
     }
 
+    // Activity lifecyle methods
+    //================================================================================
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -56,13 +71,44 @@ public class CameraActivity extends Activity {
         dispatchTakePictureIntent();
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == REQUEST_TAKE_PHOTO && resultCode == RESULT_OK) {
+
+            //get bitmap from camera activity file path
+            mCameraImgBitmap = BitmapFactory.decodeFile(mCameraImgFilePath);
+
+            //rotate the camera image and save to file
+            rotateImages();
+            writeFile(mCameraImgFilePath, mCameraImgBitmap);
+
+            //create a thumbnail from the camera image, compress, crop and write to file
+            mThumbnailBitmap = mCameraImgBitmap;
+            compressBitmap(mThumbnailBitmap);
+            circleCropImage();
+            writeFile(mThumbnailImgFilePath, mThumbnailBitmap);
+
+            returnImage();
+
+        } else if (requestCode == REQUEST_TAKE_PHOTO && resultCode == RESULT_CANCELED) {
+            setResult(RESULT_CANCELED);
+            finish();
+        }
+    }
+
+    // Bitmap transformation
+    //================================================================================
+
+    //Create empty files for the camera image and thumbnail
+    //Request a camera intent which will store the taken picture in these files
     private void dispatchTakePictureIntent() {
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         // Ensure that there's a camera activity to handle the intent
         if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
 
             // Create the File where the photo should go
-
             try {
                 mCameraImgFile = createCameraImgFile();
                 mThumbnailImgFile = createThumbnailImgFile();
@@ -79,8 +125,8 @@ public class CameraActivity extends Activity {
         }
     }
 
+    //Create files with unique filenames
     private File createThumbnailImgFile() throws IOException {
-        // Create an image file name
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(new Date());
         String mImageFileName = "JPEG_" + "Thumbnail_" + timeStamp + "_";
         File storageDir = Environment.getExternalStoragePublicDirectory(
@@ -113,41 +159,7 @@ public class CameraActivity extends Activity {
         return image;
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-
-        if (requestCode == REQUEST_TAKE_PHOTO && resultCode == RESULT_OK) {
-
-            //get bitmap from camera activity file path
-            mCameraImgBitmap = BitmapFactory.decodeFile(mCameraImgFilePath);
-
-            //rotate the camera image and save to file
-            rotateImages();
-            writeFile(mCameraImgFilePath, mCameraImgBitmap);
-
-            //create a thumbnail from the camera image, compress, crop and write to file
-            mThumbnailBitmap = mCameraImgBitmap;
-            compressBitmap(mThumbnailBitmap);
-            circleCropImage();
-            writeFile(mThumbnailImgFilePath, mThumbnailBitmap);
-
-            returnImage();
-
-        } else if (requestCode == REQUEST_TAKE_PHOTO && resultCode == RESULT_CANCELED) {
-            setResult(RESULT_CANCELED);
-            finish();
-        }
-    }
-
-    private void returnImage() {
-        Intent returnFilePaths = new Intent();
-        returnFilePaths.putExtra(CAMERA_IMG_FILE_PATH, mCameraImgFilePath);
-        returnFilePaths.putExtra(THUMBNAIL_IMG_FILE_PATH, mThumbnailImgFilePath);
-        setResult(RESULT_OK, returnFilePaths);
-        finish();
-    }
-
+    //Crop the thumnail image and feather the edges
     private void circleCropImage() {
         int width = mThumbnailBitmap.getWidth();
         int height = mThumbnailBitmap.getHeight();
@@ -256,6 +268,8 @@ public class CameraActivity extends Activity {
         return inSampleSize;
     }
 
+    //Camera images are not stored in the correct rotation upon taking them
+    //Read image EXIF data and rotate images accordingly
     private void rotateImages() {
         ExifInterface exif;
         try {
@@ -298,10 +312,19 @@ public class CameraActivity extends Activity {
         }
     }
 
+    private void returnImage() {
+        Intent returnFilePaths = new Intent();
+        returnFilePaths.putExtra(CAMERA_IMG_FILE_PATH, mCameraImgFilePath);
+        returnFilePaths.putExtra(THUMBNAIL_IMG_FILE_PATH, mThumbnailImgFilePath);
+        setResult(RESULT_OK, returnFilePaths);
+        finish();
+    }
+
     @Override
     public void onBackPressed() {
         super.onBackPressed();
 
+        //If camera operation is cancelled delete file from storage
         mCameraImgFile.delete();
         mThumbnailImgFile.delete();
         finish();

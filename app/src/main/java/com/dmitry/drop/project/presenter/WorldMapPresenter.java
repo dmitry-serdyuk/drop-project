@@ -13,7 +13,7 @@ public interface WorldMapPresenter extends MvpPresenter<WorldMapView> {
 
     void onMyLocationClicked();
 
-    void onCreatePostClick();
+    void onAddPostClick();
 
     void onMapClicked(double latitude, double longitude);
 

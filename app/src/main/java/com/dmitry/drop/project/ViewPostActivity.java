@@ -1,6 +1,5 @@
 package com.dmitry.drop.project;
 
-import android.animation.Animator;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -10,13 +9,8 @@ import android.support.annotation.NonNull;
 
 import com.dmitry.drop.project.utility.RecyclerViewUtils.*;
 
-import android.support.v7.widget.LinearSmoothScroller;
 import android.support.v7.widget.RecyclerView;
 import android.text.format.DateUtils;
-import android.transition.Slide;
-import android.util.Log;
-import android.view.Gravity;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewTreeObserver;
 import android.view.animation.Interpolator;
@@ -31,11 +25,8 @@ import android.widget.Toast;
 import com.bumptech.glide.Glide;
 import com.dmitry.drop.project.adapter.ReplyAdapter;
 import com.dmitry.drop.project.model.Post;
-import com.dmitry.drop.project.model.PostModel;
 import com.dmitry.drop.project.model.PostModelImpl;
 import com.dmitry.drop.project.model.Reply;
-import com.dmitry.drop.project.model.ReplyModel;
-import com.dmitry.drop.project.model.ReplyModelImpl;
 import com.dmitry.drop.project.presenter.ViewPostPresenter;
 import com.dmitry.drop.project.presenter.ViewPostPresenterImpl;
 import com.dmitry.drop.project.view.ViewPostView;
@@ -61,12 +52,24 @@ import pl.droidsonroids.gif.GifImageView;
 import static com.dmitry.drop.project.utility.AnimUtils.getFastOutSlowInInterpolator;
 
 /**
- * Created by Laptop on 15/06/2016.
+ * Created by Dmitry on 15/06/2016.
+ *
+ * Called by WorldMapActivity to view a clicked post
+ *
+ * A list of replies is loaded and displayed for a post
+ * Users are able to leave a reply if they are withing the post's centre radius
+ * Displays post or reply photo's in fullscreen mode
+ * Adds a like to a post which as a result increases its radius
  */
 public class ViewPostActivity extends MvpActivity<ViewPostView, ViewPostPresenter>
         implements ViewPostView {
 
+    // Constants
+    //================================================================================
     private static final int REQUEST_CAMERA_PHOTO = 1;
+
+    // Views
+    //================================================================================
     @BindView(R.id.viewPost_postImg)
     ImageView postImg;
     @BindView(R.id.viewPost_author)
@@ -81,8 +84,8 @@ public class ViewPostActivity extends MvpActivity<ViewPostView, ViewPostPresente
     RecyclerView mRecyclerView;
     @BindView(R.id.viewPost_swipeRefreshLayout)
     SwipyRefreshLayout mRefreshLayout;
-    @BindView(R.id.replyBar_imgSelectButton)
-    ImageView replyImage;
+    @BindView(R.id.replyBar_takeReplyPhoto)
+    ImageView takeReplyPhoto;
     @BindView(R.id.viewPost_postImgOverlay)
     ImageView postImageOverlay;
     @BindView(R.id.viewPost_accountLayout)
@@ -104,16 +107,19 @@ public class ViewPostActivity extends MvpActivity<ViewPostView, ViewPostPresente
     @BindView(R.id.viewPost_repliesLoading)
     ProgressBar repliesLoading;
     @BindView(R.id.viePost_noRepliesPlaceholder)
-    TextView noRepliesPlaceholder;
+    ImageView emptyState;
 
+    // Variables
+    //================================================================================
     private ReplyAdapter mAdapter;
     private Post mPost;
     private String mImageReplyFilePath;
     private List<Reply> mReplies = new ArrayList<>();
     private GifDrawable mLikeGif;
     private boolean mLiked = false;
-    private boolean canReply;
+    private boolean mCanReply;
 
+    //Create an intent for this class with all the necessary extras
     public static Intent createIntent(Context context, long postId, boolean canReply) {
         Intent intent = new Intent(context, ViewPostActivity.class);
         intent.putExtra(POST_ID_EXTRA, postId);
@@ -127,28 +133,44 @@ public class ViewPostActivity extends MvpActivity<ViewPostView, ViewPostPresente
         return new ViewPostPresenterImpl(new PostModelImpl());
     }
 
+    // Activity lifecycle methods
+    //================================================================================
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_view_post);
         ButterKnife.bind(this);
 
-        canReply = getIntent().getBooleanExtra(CAN_REPLY_EXTRA, false);
+        mCanReply = getIntent().getBooleanExtra(CAN_REPLY_EXTRA, false);
         setupView();
         presenter.onStart(getIntent().getLongExtra(POST_ID_EXTRA, -1));
+    }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == REQUEST_CAMERA_PHOTO && resultCode == RESULT_OK) {
+            mImageReplyFilePath = data.getStringExtra(CameraActivity.CAMERA_IMG_FILE_PATH);
+            setReplyThumbnail();
+        } else if (requestCode == REQUEST_CAMERA_PHOTO && resultCode == RESULT_CANCELED) {
+            Toast.makeText(this, getString(R.string.photo_error), Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        presenter.onDestroy(mPost, mLiked);
+        super.onDestroy();
     }
 
     private void setupView() {
-        replyImage.setAdjustViewBounds(true);
+        takeReplyPhoto.setAdjustViewBounds(true);
         barLayout.setAlpha(0f);
-
         viewPostLike.setAlpha(0.8f);
 
-
-        if(!canReply) {
+        if(!mCanReply) {
             barLayout.setVisibility(View.GONE);
-            noRepliesPlaceholder.invalidate();
         }
 
         mRecyclerView.setLayoutManager(new LinearLayoutManagerWithSmoothScroller(this));
@@ -191,6 +213,8 @@ public class ViewPostActivity extends MvpActivity<ViewPostView, ViewPostPresente
         postDateTime.setText(getPostTimeSpan());
     }
 
+    // Animations
+    //================================================================================
     private void enterAnimation() {
 
         Interpolator interp = getFastOutSlowInInterpolator(this);
@@ -233,6 +257,26 @@ public class ViewPostActivity extends MvpActivity<ViewPostView, ViewPostPresente
                 .start();
     }
 
+    @Override
+    public void showLikeAnim() {
+        try {
+            if (!mLiked) {
+                mLiked = true;
+                mLikeGif = new GifDrawable(getResources(), R.drawable.like_anim);
+            } else {
+                mLiked = false;
+                mLikeGif = new GifDrawable(getResources(), R.drawable.unlike_anim);
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        viewPostLike.setImageDrawable(mLikeGif);
+        mLikeGif.start();
+    }
+
+    //Create a time span from post creating until current time and date
     private String getPostTimeSpan() {
         String dateCreated = mPost.getDateCreated();
         SimpleDateFormat format = new SimpleDateFormat("dd/MM/yyy HH:mm", Locale.US);
@@ -253,16 +297,6 @@ public class ViewPostActivity extends MvpActivity<ViewPostView, ViewPostPresente
         return timeSpan;
     }
 
-    @OnClick(R.id.replyBar_sendButton)
-    public void onSendReplyClick() {
-        String author = getString(R.string.username_placeholder);
-        String annotation = replyComment.getText().toString();
-        String date = DateFormat.getInstance().format(new Date());
-
-        mRefreshLayout.setRefreshing(true);
-        presenter.onSendReplyClick(mPost, author, annotation, date, mImageReplyFilePath);
-    }
-
     private void closeSoftKeyboard() {
         View view = this.getCurrentFocus();
         if (view != null) {
@@ -272,53 +306,11 @@ public class ViewPostActivity extends MvpActivity<ViewPostView, ViewPostPresente
     }
 
     @Override
-    public void showReplyLoadingError(String error) {
-        Toast.makeText(this, error, Toast.LENGTH_SHORT).show();
-    }
-
-    @Override
-    public void showPostLoadingError(String error) {
-
-    }
-
-    @Override
     public void clearReplyBox() {
         closeSoftKeyboard();
         mImageReplyFilePath = null;
         replyComment.setText("");
-        replyImage.setImageDrawable(getDrawable(android.R.drawable.ic_menu_camera));
-    }
-
-    @Override
-    public void showRepliesLoading(boolean loading) {
-        if (loading)
-            repliesLoading.setVisibility(View.VISIBLE);
-        else
-            repliesLoading.setVisibility(View.INVISIBLE);
-    }
-
-    @Override
-    public void showSendReplyError(String error) {
-        //TODO: show error
-    }
-
-    @Override
-    public void showLikeAnim() {
-        try {
-            if (!mLiked) {
-                mLiked = true;
-                mLikeGif = new GifDrawable(getResources(), R.drawable.like_anim);
-            } else {
-                mLiked = false;
-                mLikeGif = new GifDrawable(getResources(), R.drawable.unlike_anim);
-            }
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        viewPostLike.setImageDrawable(mLikeGif);
-        mLikeGif.start();
+        takeReplyPhoto.setImageDrawable(getDrawable(android.R.drawable.ic_menu_camera));
     }
 
     @Override
@@ -357,17 +349,20 @@ public class ViewPostActivity extends MvpActivity<ViewPostView, ViewPostPresente
 
         if (replies.size() == 0) {
             mRecyclerView.smoothScrollToPosition(mReplies.size());
-            noRepliesPlaceholder.setVisibility(View.VISIBLE);
+            emptyState.setVisibility(View.VISIBLE);
 
         } else {
             mRecyclerView.smoothScrollToPosition(mReplies.size() - 1);
-            noRepliesPlaceholder.setVisibility(View.INVISIBLE);
+            emptyState.setVisibility(View.INVISIBLE);
         }
     }
 
-    @OnClick(R.id.replyBar_imgSelectButton)
-    public void onSelectImageClick() {
-        presenter.onSelectImageClick();
+    @Override
+    public void showRepliesLoading(boolean loading) {
+        if (loading)
+            repliesLoading.setVisibility(View.VISIBLE);
+        else
+            repliesLoading.setVisibility(View.INVISIBLE);
     }
 
     @Override
@@ -376,21 +371,26 @@ public class ViewPostActivity extends MvpActivity<ViewPostView, ViewPostPresente
         startActivityForResult(takePhoto, REQUEST_CAMERA_PHOTO);
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-
-        if (requestCode == REQUEST_CAMERA_PHOTO && resultCode == RESULT_OK) {
-            mImageReplyFilePath = data.getStringExtra(CameraActivity.CAMERA_IMG_FILE_PATH);
-            setReplyThumbnail();
-        } else if (requestCode == REQUEST_CAMERA_PHOTO && resultCode == RESULT_CANCELED) {
-            Toast.makeText(this, getString(R.string.photo_error), Toast.LENGTH_SHORT).show();
-        }
-    }
-
     private void setReplyThumbnail() {
         Bitmap bitmap = BitmapFactory.decodeFile(mImageReplyFilePath);
-        replyImage.setImageBitmap(Bitmap.createScaledBitmap(bitmap, REPLY_IMG_WIDTH, REPLY_IMG_HEIGHT, false));
+        takeReplyPhoto.setImageBitmap(Bitmap.createScaledBitmap(bitmap, REPLY_IMG_WIDTH, REPLY_IMG_HEIGHT, false));
+    }
+
+    @OnClick(R.id.replyBar_sendButton)
+    public void onSendReplyClick() {
+        String author = getString(R.string.username_placeholder);
+        String annotation = replyComment.getText().toString();
+        String date = DateFormat.getInstance().format(new Date());
+
+        presenter.onSendReplyClick(mPost, author, annotation, date, mImageReplyFilePath);
+    }
+
+    // OnClicks
+    //================================================================================
+
+    @OnClick(R.id.replyBar_takeReplyPhoto)
+    public void onTakeReplyPhotoClick() {
+        presenter.onTakeReplyPhotoClick();
     }
 
     @OnClick(R.id.viewPost_likeGif)
@@ -412,9 +412,20 @@ public class ViewPostActivity extends MvpActivity<ViewPostView, ViewPostPresente
         }
     }
 
+    // Errors
+    //================================================================================
     @Override
-    protected void onDestroy() {
-        presenter.onDestroy(mPost, mLiked);
-        super.onDestroy();
+    public void showReplyLoadingError(String error) {
+        Toast.makeText(this, error, Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void showPostLoadingError(String error) {
+        Toast.makeText(this, error, Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void showSendReplyError(String error) {
+        Toast.makeText(this, error, Toast.LENGTH_SHORT).show();
     }
 }

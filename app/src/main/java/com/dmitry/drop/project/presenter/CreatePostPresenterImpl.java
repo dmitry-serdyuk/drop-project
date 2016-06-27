@@ -6,7 +6,14 @@ import com.dmitry.drop.project.view.CreatePostView;
 import com.hannesdorfmann.mosby.mvp.MvpBasePresenter;
 
 /**
- * Created by Laptop on 7/06/2016.
+ * Created by Dmitry on 7/06/2016.
+ *
+ * Presenter implementations handle view events such as onStart or onClick
+ * The presenter interacts with a data model to retrieve data through callbacks
+ * This data is then passed to the view along with any loading or error calls
+ *
+ * The model instance is obtain from an activity
+ *
  */
 public class CreatePostPresenterImpl extends MvpBasePresenter<CreatePostView> implements CreatePostPresenter {
 

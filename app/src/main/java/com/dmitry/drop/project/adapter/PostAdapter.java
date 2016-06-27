@@ -1,8 +1,6 @@
 package com.dmitry.drop.project.adapter;
 
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -10,7 +8,7 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 
 import com.bumptech.glide.Glide;
-import com.bumptech.glide.request.animation.ViewPropertyAnimation;
+
 import com.dmitry.drop.project.R;
 import com.dmitry.drop.project.model.Post;
 
@@ -19,7 +17,7 @@ import java.util.List;
 import butterknife.ButterKnife;
 
 /**
- * Created by Dima on 25/06/2016.
+ * Created by Dmitry on 25/06/2016.
  */
 public class PostAdapter extends RecyclerView.Adapter<PostAdapter.ViewHolder> {
 
@@ -60,10 +58,10 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.ViewHolder> {
         String imageFilePath = posts.get(position).getImageFilePath();
         Glide.with(context).load(imageFilePath).centerCrop().into(holder.postImage);
 
-        //glide resources in to match with adapter item animation
         Glide.with(context).load("").placeholder(
                 context.getDrawable(R.drawable.post_img_overlay)).into(holder.imageOverlay);
 
+        //Display a different image if the user can reply to a post
         if (posts.get(position).isWithinRadius(latitude, longitude)) {
             Glide.with(context).load("").placeholder(
                     context.getDrawable(R.drawable.view_icon_activated)).into(holder.viewIcon);
@@ -71,7 +69,6 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.ViewHolder> {
             Glide.with(context).load("").placeholder(
                     context.getDrawable(R.drawable.view_icon)).into(holder.viewIcon);
         }
-
     }
 
     @Override

@@ -27,24 +27,38 @@ import butterknife.ButterKnife;
 import butterknife.OnClick;
 
 /**
- * Created by Laptop on 7/06/2016.
+ * Created by Dmitry on 7/06/2016.
+ *
+ * Called by WorldMapView to create a post
+ *
+ * Requests a file path from the CameraActivity and retrieves a photo from storage
+ * An annotation is then added to the photo and a Post object is created
  */
 public class CreatePostActivity extends MvpActivity<CreatePostView, CreatePostPresenter>
         implements
         CreatePostView {
 
+    // Constants
+    //================================================================================
     private static final int REQUEST_CAMERA_PHOTO = 1;
+
+    // Views
+    //================================================================================
     @BindView(R.id.createPost_cameraImg)
     ImageView cameraImg;
     @BindView(R.id.createPost_annotation)
     EditText annotation;
     @BindView(R.id.createPost_dropButton)
     ImageView dropButton;
+
+    // Variables
+    //================================================================================
     private double mLongitude;
     private double mLatitude;
     private String mCameraImageFilePath;
     private String mThumbnailImageFilePath;
 
+    //Create an intent for this class with all the necessary extras
     public static Intent createIntent(Context context, double latitude, double longitude) {
         Intent intent = new Intent(context, CreatePostActivity.class);
         intent.putExtra(LATITUDE_EXTRA, latitude);
@@ -52,11 +66,16 @@ public class CreatePostActivity extends MvpActivity<CreatePostView, CreatePostPr
         return intent;
     }
 
+    // Constructors
+    //================================================================================
     @NonNull
     @Override
     public CreatePostPresenter createPresenter() {
         return new CreatePostPresenterImpl(new PostModelImpl());
     }
+
+    // Activity lifecycle methods
+    //================================================================================
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -90,7 +109,7 @@ public class CreatePostActivity extends MvpActivity<CreatePostView, CreatePostPr
         String annotationText = annotation.getText().toString();
         String date = DateFormat.getInstance().format(new Date());
         if (annotationText.length() == 0) {
-            Toast.makeText(this, "Write something", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.write_something_string, Toast.LENGTH_SHORT).show();
         } else {
             presenter.onDropButtonClick(annotationText, mCameraImageFilePath, mThumbnailImageFilePath,
                     mLatitude, mLongitude, date);
@@ -99,7 +118,7 @@ public class CreatePostActivity extends MvpActivity<CreatePostView, CreatePostPr
 
     @Override
     public void showSavePostError(String error) {
-
+        Toast.makeText(this, error, Toast.LENGTH_SHORT).show();
     }
 
     @Override

@@ -4,7 +4,9 @@ import com.dmitry.drop.project.model.Post;
 import com.hannesdorfmann.mosby.mvp.MvpView;
 
 /**
- * Created by Laptop on 7/06/2016.
+ * Created by Dmitry on 7/06/2016.
+ *
+ * View interfaces are implemented by activities and used by the presenters to interact with the view
  */
 public interface CreatePostView extends MvpView {
 

@@ -1,54 +1,54 @@
 package com.dmitry.drop.project.utility;
 
 /**
- * Created by Dima on 25/06/2016.
+ * Created by Dmitry on 25/06/2016.
+ *
+ * CircleView is used to display the open post animation when a post is clicked
+ * An instance of this class is created and added to a layout in order to be animated
  */
 import android.content.Context;
 import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.Paint;
 import android.support.v4.content.ContextCompat;
-import android.util.AttributeSet;
 import android.view.View;
 
 import com.dmitry.drop.project.R;
 
 public class CircleView extends View
 {
-    private Paint fillPaint, strokePaint;
+    private Paint mFillPaint, mStrokePaint;
     private Context mContext;
-    int x;
-    int y;
+    private int mX;
+    private int mY;
 
     public CircleView(Context context, int x, int y)
     {
         super(context);
         mContext = context;
-        this.x = x;
-        this.y = y;
+        this.mX = x;
+        this.mY = y;
         init();
     }
 
     private void init()
     {
-        fillPaint = new Paint();
-        fillPaint.setAntiAlias(true);
-        fillPaint.setStyle(Paint.Style.FILL);
-        fillPaint.setColor(ContextCompat.getColor(mContext, R.color.white_transp));
+        mFillPaint = new Paint();
+        mFillPaint.setAntiAlias(true);
+        mFillPaint.setStyle(Paint.Style.FILL);
+        mFillPaint.setColor(ContextCompat.getColor(mContext, R.color.white_transp));
 
-        strokePaint = new Paint();
-        strokePaint.setAntiAlias(true);
-        strokePaint.setStyle(Paint.Style.STROKE);
-        strokePaint.setColor(ContextCompat.getColor(mContext, R.color.white));
-        strokePaint.setStrokeWidth(1);
+        mStrokePaint = new Paint();
+        mStrokePaint.setAntiAlias(true);
+        mStrokePaint.setStyle(Paint.Style.STROKE);
+        mStrokePaint.setColor(ContextCompat.getColor(mContext, R.color.white));
+        mStrokePaint.setStrokeWidth(1);
     }
 
     protected void onDraw(Canvas canvas)
     {
         super.onDraw(canvas);
 
-        canvas.drawCircle(x, y, 100, fillPaint);
-        canvas.drawCircle(x, y, 100, strokePaint);
+        canvas.drawCircle(mX, mY, 100, mFillPaint);
+        canvas.drawCircle(mX, mY, 100, mStrokePaint);
     }
-
 }

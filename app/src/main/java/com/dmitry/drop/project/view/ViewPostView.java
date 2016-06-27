@@ -7,7 +7,9 @@ import com.hannesdorfmann.mosby.mvp.MvpView;
 import java.util.List;
 
 /**
- * Created by Laptop on 15/06/2016.
+ * Created by Dmitry on 15/06/2016.
+ *
+ * View interfaces are implemented by activities and used by the presenters to interact with the view
  */
 public interface ViewPostView extends MvpView {
 

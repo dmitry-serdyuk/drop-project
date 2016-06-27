@@ -4,7 +4,9 @@ import com.activeandroid.ActiveAndroid;
 import com.activeandroid.Configuration;
 
 /**
- * Created by Laptop on 20/06/2016.
+ * Created by Dmitry on 20/06/2016.
+ *
+ * Application class extends ORM and initialises database
  */
 public class Application extends com.activeandroid.app.Application {
 

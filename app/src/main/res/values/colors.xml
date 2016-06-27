@@ -4,19 +4,18 @@
     <color name="colorPrimaryDark">#313131</color>
     <color name="colorAccent">#700096ff</color>
 
-    <color name="carbon">#625D5D</color>
-    <color name="dim_foreground_holo_dark">#bebebe</color>
     <color name="feint_blue">#dcdee3</color>
 
     <color name="blue">#0096ff</color>
     <color name="light_blue_transp">#100096ff</color>
 
-    <color name="grey">#9197a3</color>
     <color name="white">#ffffff</color>
+
     <color name="white_transp">#99ffffff</color>
+
+    <color name="grey">#9197a3</color>
     <color name="carbon_black">#50313131</color>
 
-    <color name="transparent_white">#99ffffff</color>
     <color name="green">#03db67</color>
     <color name="light_green_transp">#6003db67</color>
 </resources>

@@ -3,10 +3,16 @@ package com.dmitry.drop.project.model;
 import java.util.List;
 
 /**
- * Created by Laptop on 20/06/2016.
+ * Created by Dmitry on 20/06/2016.
+ *
+ * Post Model Interface declares methods which are implemented by the post model
+ * This interface declare methods as well as Callbacks which are used to retrieve data
+ * by the presenters.
  */
 public interface PostModel {
 
+    // Methods
+    //================================================================================
     void savePost(String annotationText, String cameraImgFilePath, String thumbnailImgFilePath,
                   double latitude, double longitude, String date, SavePostCallback callback);
 
@@ -16,15 +22,16 @@ public interface PostModel {
 
     void getAllPosts(GetAllPostsCallback callback);
 
-    void saveReply(Post post, String author, String annotation, String date, String imageFilePath, SaveReplyCallback callback);
+    void saveReply(Post post, String author, String annotation, String date, String imageFilePath,
+                   SaveReplyCallback callback);
 
     void like(Post post, boolean liked);
 
     //debug Method
     void delete(long postId);
 
-
-    //callbacks
+    // Callbacks
+    //================================================================================
     interface GetRepliesCallback {
         void onSuccess(List<Reply> replies);
 
@@ -54,5 +61,4 @@ public interface PostModel {
 
         void onError(String error);
     }
-
 }

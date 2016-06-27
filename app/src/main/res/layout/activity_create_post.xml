@@ -9,7 +9,6 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_alignParentTop="true"
-        android:onClick="onCameraImgClick"
         android:scaleType="centerCrop" />
 
     <EditText
@@ -33,6 +32,5 @@
         android:layout_alignParentRight="true"
         android:layout_margin="10dp"
         android:src="@drawable/drop" />
-
 
 </RelativeLayout>

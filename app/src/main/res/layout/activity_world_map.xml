@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-
+    <!-- Google Map -->
     <com.google.android.gms.maps.MapView
         android:id="@+id/map"
         android:layout_width="match_parent"
@@ -16,10 +16,9 @@
         android:layout_height="50dp"
         android:layout_marginLeft="3dp"
         android:layout_marginTop="50dp"
-        android:background="@color/transparent_white"
+        android:background="@color/white"
         android:onClick="onDeleteClick"
         android:text="D" />
-
 
     <ImageView
         android:id="@+id/worldMap_addPostButton"
@@ -30,14 +29,16 @@
         android:layout_margin="10dp"
         android:src="@drawable/add" />
 
-
+    <!-- Post click animation
+         A CircleView will be added in here and animated -->
     <FrameLayout
         android:id="@+id/woldMap_postReveal"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:visibility="invisible" />
 
-
+        <!-- Post Selector
+             Remains hidden until multiple posts are clicked -->
         <android.support.v7.widget.RecyclerView
             android:id="@+id/worldMap_postSelector"
             android:layout_width="match_parent"
@@ -47,9 +48,6 @@
             android:layout_marginEnd="10dp">
 
         </android.support.v7.widget.RecyclerView>
-
-
-
 
 </RelativeLayout>
 

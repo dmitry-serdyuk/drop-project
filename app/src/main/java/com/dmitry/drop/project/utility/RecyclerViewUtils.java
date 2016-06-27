@@ -12,7 +12,9 @@ import android.view.View;
 import com.dmitry.drop.project.R;
 
 /**
- * Created by Dima on 25/06/2016.
+ * Created by Dmitry on 25/06/2016.
+ * <p/>
+ * Utilities for the recyclerview
  */
 public class RecyclerViewUtils {
 

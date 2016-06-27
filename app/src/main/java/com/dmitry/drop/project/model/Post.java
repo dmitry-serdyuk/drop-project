@@ -14,7 +14,10 @@ import com.google.android.gms.maps.model.LatLng;
 import java.util.List;
 
 /**
- * Created by Laptop on 20/05/2016.
+ * Created by Dmitry on 20/05/2016.
+ *
+ * Post data transfer object, contain fields which are annotated with ActiveAndroid ORM.
+ * ORM handles creating fields and relationships between DTO's
  */
 
 @Table(name = "Posts")
@@ -92,10 +95,6 @@ public class Post extends Model implements Parcelable {
         return imageFilePath;
     }
 
-    public void setImageFilePath(String imageFilePath) {
-        this.imageFilePath = imageFilePath;
-    }
-
     public double getLatitude() {
         return latitude;
     }
@@ -116,20 +115,8 @@ public class Post extends Model implements Parcelable {
         return radius;
     }
 
-    public void setRadius(float radius) {
-        this.radius = radius;
-    }
-
     public String getDateCreated() {
         return dateCreated;
-    }
-
-    public void setDateCreated(String dateCreated) {
-        this.dateCreated = dateCreated;
-    }
-
-    public LatLng getLatLng() {
-        return new LatLng(latitude, longitude);
     }
 
     public List<Reply> replies() {

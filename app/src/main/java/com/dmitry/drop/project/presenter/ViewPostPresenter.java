@@ -5,7 +5,7 @@ import com.dmitry.drop.project.view.ViewPostView;
 import com.hannesdorfmann.mosby.mvp.MvpPresenter;
 
 /**
- * Created by Laptop on 15/06/2016.
+ * Created by Dmitry on 15/06/2016.
  */
 public interface ViewPostPresenter extends MvpPresenter<ViewPostView> {
 
@@ -13,7 +13,7 @@ public interface ViewPostPresenter extends MvpPresenter<ViewPostView> {
 
     void onSendReplyClick(Post post, String author, String annotation, String date, String imageFilePath);
 
-    void onSelectImageClick();
+    void onTakeReplyPhotoClick();
 
     void onStart(long postId);
 

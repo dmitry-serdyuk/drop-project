@@ -1,22 +1,21 @@
 package com.dmitry.drop.project.presenter;
 
-
-import android.animation.Animator;
-import android.animation.ValueAnimator;
-import android.view.animation.Animation;
-
 import com.dmitry.drop.project.model.Post;
 import com.dmitry.drop.project.model.PostModel;
-import com.dmitry.drop.project.utility.Constants;
 import com.dmitry.drop.project.view.WorldMapView;
 import com.hannesdorfmann.mosby.mvp.MvpBasePresenter;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 /**
- * Created by Dima on 20/05/2016.
+ * Created by Dmitry on 20/05/2016.
+ *
+ * Presenter implementations handle view events such as onStart or onClick
+ * The presenter interacts with a data model to retrieve data through callbacks
+ * This data is then passed to the view along with any loading or error calls
+ *
+ * The model instance is obtain from an activity
  */
 public class WorldMapPresenterImpl extends MvpBasePresenter<WorldMapView> implements WorldMapPresenter {
 
@@ -33,7 +32,7 @@ public class WorldMapPresenterImpl extends MvpBasePresenter<WorldMapView> implem
     }
 
     @Override
-    public void onCreatePostClick() {
+    public void onAddPostClick() {
         if (isViewAttached())
             getView().createPost();
     }
@@ -55,6 +54,8 @@ public class WorldMapPresenterImpl extends MvpBasePresenter<WorldMapView> implem
         });
     }
 
+    //Recieve a list of all posts and map click location
+    //Determine if the click coordinated are within a posts radius
     private void getClickedPosts(List<Post> posts, double latitude, double longitude) {
         final List<Post> clickedPosts = new ArrayList<Post>();
         for (Post post : posts) {
@@ -63,6 +64,9 @@ public class WorldMapPresenterImpl extends MvpBasePresenter<WorldMapView> implem
             }
         }
 
+        //If only one post was clicked, play animation from post coordinates then view it straight away
+        //If multiple posts are detected play the post open animation from click
+        //position and open up post selector
         if (clickedPosts.size() != 0 && isViewAttached()) {
             if (clickedPosts.size() == 1)
                 getView().viewPost(clickedPosts.get(0));

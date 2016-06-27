@@ -8,7 +8,11 @@ import com.activeandroid.annotation.Column;
 import com.activeandroid.annotation.Table;
 
 /**
- * Created by Laptop on 7/06/2016.
+ * Created by Dmitry on 7/06/2016.
+ *
+ * Reply data transfer object, contain fields which are annotated with ActiveAndroid ORM.
+ * ORM handles creating fields and relationships between DTO's
+ * A reply have a One to Many relationship with a post by having its own 'post' object
  */
 
 @Table(name = "Replies")
@@ -58,36 +62,17 @@ public class Reply extends Model implements Parcelable {
         }
     };
 
-    public String getAuthor() {
-        return author;
-    }
-
-    public void setAuthor(String author) {
-        this.author = author;
-    }
 
     public String getComment() {
         return comment;
-    }
-
-    public void setComment(String comment) {
-        this.comment = comment;
     }
 
     public String getDateCreated() {
         return dateCreated;
     }
 
-    public void setDateCreated(String dateCreated) {
-        this.dateCreated = dateCreated;
-    }
-
     public String getImageFilePath() {
         return imageFilePath;
-    }
-
-    public void setImageFilePath(String imageFilePath) {
-        this.imageFilePath = imageFilePath;
     }
 
     @Override

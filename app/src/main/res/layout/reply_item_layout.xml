@@ -53,8 +53,6 @@
 
             </RelativeLayout>
 
-
-
             <TextView
                 android:id="@+id/replyLayout_comment"
                 android:layout_width="match_parent"
